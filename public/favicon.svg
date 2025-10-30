@@ -1,0 +1,25 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Bitcount Grid inspired pixelated "W" -->
+  <!-- Using Wallie accent color #00E5FF on transparent background -->
+
+  <!-- Left vertical stroke -->
+  <rect x="4" y="6" width="3" height="20" fill="#00E5FF"/>
+
+  <!-- Left diagonal down -->
+  <rect x="7" y="18" width="3" height="3" fill="#00E5FF"/>
+  <rect x="10" y="21" width="3" height="3" fill="#00E5FF"/>
+
+  <!-- Center vertical peak -->
+  <rect x="13" y="12" width="3" height="12" fill="#00E5FF"/>
+
+  <!-- Right diagonal down -->
+  <rect x="16" y="18" width="3" height="3" fill="#00E5FF"/>
+  <rect x="19" y="21" width="3" height="3" fill="#00E5FF"/>
+
+  <!-- Right vertical stroke -->
+  <rect x="22" y="6" width="3" height="20" fill="#00E5FF"/>
+
+  <!-- Optional glow effect for depth -->
+  <rect x="4" y="6" width="3" height="20" fill="#00E5FF" opacity="0.3" transform="translate(-0.5, 0.5)"/>
+  <rect x="22" y="6" width="3" height="20" fill="#00E5FF" opacity="0.3" transform="translate(0.5, 0.5)"/>
+</svg>

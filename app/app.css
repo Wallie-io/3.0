@@ -3,13 +3,32 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* Wallie Color Palette */
+  --color-wallie-void: #0a0a0f;
+  --color-wallie-dark: #121218;
+  --color-wallie-darker: #1a1a24;
+  --color-wallie-slate: #242432;
+  --color-wallie-charcoal: #2d2d40;
+
+  --color-wallie-accent: #00e5ff;
+  --color-wallie-accent-dim: #00a8cc;
+  --color-wallie-accent-glow: #00e5ff40;
+
+  --color-wallie-purple: #9d4edd;
+  --color-wallie-pink: #ff006e;
+
+  --color-wallie-success: #00f5a0;
+  --color-wallie-warning: #ffd60a;
+  --color-wallie-error: #ff006e;
+
+  --color-wallie-text-primary: #ffffff;
+  --color-wallie-text-secondary: #b4b4c8;
+  --color-wallie-text-tertiary: #7c7c94;
+  --color-wallie-text-muted: #4a4a5e;
 }
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
-
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+  @apply bg-white text-gray-900;
 }
