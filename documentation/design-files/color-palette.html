@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wallie Color Palette</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0A0A0F;
+      color: #FFFFFF;
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #00E5FF, #9D4EDD);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      color: #B4B4C8;
+      font-size: 18px;
+      margin-bottom: 48px;
+    }
+
+    .section {
+      margin-bottom: 64px;
+    }
+
+    .section-title {
+      font-size: 32px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      color: #FFFFFF;
+    }
+
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .color-card {
+      background: #1A1A24;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #2D2D40;
+      transition: all 0.2s ease;
+    }
+
+    .color-card:hover {
+      transform: translateY(-4px);
+      border-color: #00E5FF;
+      box-shadow: 0 10px 25px rgba(0, 229, 255, 0.2);
+    }
+
+    .color-swatch {
+      height: 120px;
+      width: 100%;
+      position: relative;
+    }
+
+    .color-info {
+      padding: 20px;
+    }
+
+    .color-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #FFFFFF;
+    }
+
+    .color-value {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: #7C7C94;
+      margin-bottom: 4px;
+    }
+
+    .color-description {
+      font-size: 12px;
+      color: #B4B4C8;
+      margin-top: 12px;
+    }
+
+    .copy-btn {
+      background: #2D2D40;
+      border: none;
+      color: #B4B4C8;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: all 0.2s;
+      font-family: 'Courier New', monospace;
+    }
+
+    .copy-btn:hover {
+      background: #00E5FF;
+      color: #0A0A0F;
+    }
+
+    .copy-btn.copied {
+      background: #00F5A0;
+      color: #0A0A0F;
+    }
+
+    .usage-example {
+      background: #121218;
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 24px;
+      border: 1px solid #2D2D40;
+    }
+
+    .usage-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #00E5FF;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .code-block {
+      background: #0A0A0F;
+      padding: 16px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: #B4B4C8;
+      overflow-x: auto;
+      border: 1px solid #242432;
+    }
+
+    .gradient-showcase {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .gradient-card {
+      height: 200px;
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .gradient-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #FFFFFF;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .shadow-showcase {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 32px;
+      margin-top: 24px;
+    }
+
+    .shadow-card {
+      background: #1A1A24;
+      border-radius: 16px;
+      padding: 32px;
+      text-align: center;
+      height: 150px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+
+    .shadow-sm {
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 1px rgba(0, 229, 255, 0.1);
+    }
+
+    .shadow-md {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4), 0 0 2px rgba(0, 229, 255, 0.15), inset 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .shadow-lg {
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 5px rgba(0, 229, 255, 0.2), inset 0 0 2px rgba(255, 255, 255, 0.08);
+    }
+
+    .shadow-xl {
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 10px rgba(0, 229, 255, 0.3), inset 0 0 3px rgba(255, 255, 255, 0.1);
+    }
+
+    .shadow-glow-accent {
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.6), 0 0 40px rgba(0, 229, 255, 0.3);
+    }
+
+    .shadow-glow-purple {
+      box-shadow: 0 0 20px rgba(157, 78, 221, 0.6), 0 0 40px rgba(157, 78, 221, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Wallie Color System</h1>
+    <p class="subtitle">Complete color palette for the Wallie design system</p>
+
+    <!-- Background Colors -->
+    <section class="section">
+      <h2 class="section-title">Background Colors</h2>
+      <div class="color-grid">
+        <div class="color-card">
+          <div class="color-swatch" style="background: #0A0A0F;"></div>
+          <div class="color-info">
+            <div class="color-name">Void</div>
+            <div class="color-value">#0A0A0F</div>
+            <div class="color-value">rgb(10, 10, 15)</div>
+            <button class="copy-btn" onclick="copyColor('#0A0A0F')">Copy Hex</button>
+            <div class="color-description">Deepest background, outer app shell</div>
+          </div>
+        </div>
+
+        <div class="color-card">
+          <div class="color-swatch" style="background: #121218;"></div>
+          <div class="color-info">
+            <div class="color-name">Dark</div>
+            <div class="color-value">#121218</div>
+            <div class="color-value">rgb(18, 18, 24)</div>
+            <button class="copy-btn" onclick="copyColor('#121218')">Copy Hex</button>
+            <div class="color-description">Primary surface, main content area</div>
+          </div>
+        </div>
+
+        <div class="color-card">
+          <div class="color-swatch" style="background: #1A1A24;"></div>
+          <div class="color-info">
+            <div class="color-name">Darker</div>
+            <div class="color-value">#1A1A24</div>
+            <div class="color-value">rgb(26, 26, 36)</div>
+            <button class="copy-btn" onclick="copyColor('#1A1A24')">Copy Hex</button>
+            <div class="color-description">Elevated surface, cards, dropdowns</div>
+          </div>
+        </div>
+
+        <div class="color-card">
+          <div class="color-swatch" style="background: #242432;"></div>
+          <div class="color-info">
+            <div class="color-name">Slate</div>
+            <div class="color-value">#242432</div>
+            <div class="color-value">rgb(36, 36, 50)</div>
+            <button class="copy-btn" onclick="copyColor('#242432')">Copy Hex</button>
+            <div class="color-description">Card background, input fields</div>
+          </div>
+        </div>
+
+        <div class="color-card">
+          <div class="color-swatch" style="background: #2D2D40;"></div>
+          <div class="color-info">
+            <div class="color-name">Charcoal</div>
+            <div class="color-value">#2D2D40</div>
+            <div class="color-value">rgb(45, 45, 64)</div>
+            <button class="copy-btn" onclick="copyColor('#2D2D40')">Copy Hex</button>
+            <div class="color-description">Hover states, active elements</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Accent Colors -->
+    <section class="section">
+      <h2 class="section-title">Accent Colors</h2>
+      <div class="color-grid">
+        <div class="color-card">
+          <div class="color-swatch" style="background: #00E5FF;"></div>
+          <div class="color-info">
+            <div class="color-name">Accent (Cyan)</div>
+            <div class="color-value">#00E5FF</div>
+            <div class="color-value">rgb(0, 229, 255)</div>
+            <button class="copy-btn" onclick="copyColor('#00E5FF')">Copy Hex</button>
+            <div class="color-description">Primary brand color, CTAs, active states</div>
+          </div>
+        </div>
+
+        <div class="color-card">
+          <div class="color-swatch" style="background: #00A8CC;"></div>
+          <div class="color-info">
+            <div class="color-name">Accent Dim</div>
+            <div class="color-value">#00A8CC</div>
+            <div class="color-value">rgb(0, 168, 204)</div>
+            <button class="copy-btn" onclick="copyColor('#00A8CC')">Copy Hex</button>
+            <div class="color-description">Dimmed accent for subtle highlights</div>
+          </div>
+        </div>
+
+        <div class="color-card">
+          <div class="color-swatch" style="background: #9D4EDD;"></div>
+          <div class="color-info">
+            <div class="color-name">Purple</div>
+            <div class="color-value">#9D4EDD</div>
+            <div class="color-value">rgb(157, 78, 221)</div>
+            <button class="copy-btn" onclick="copyColor('#9D4EDD')">Copy Hex</button>
+            <div class="color-description">Links, secondary actions</div>
+          </div>
+        </div>
+
+        <div class="color-card">
+          <div class="color-swatch" style="background: #FF006E;"></div>
+          <div class="color-info">
+            <div class="color-name">Pink</div>
+            <div class="color-value">#FF006E</div>
+            <div class="color-value">rgb(255, 0, 110)</div>
+            <button class="copy-btn" onclick="copyColor('#FF006E')">Copy Hex</button>
+            <div class="color-description">Destructive actions, errors</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Semantic Colors -->
+    <section class="section">
+      <h2 class="section-title">Semantic Colors</h2>
+      <div class="color-grid">
+        <div class="color-card">
+          <div class="color-swatch" style="background: #00F5A0;"></div>
+          <div class="color-info">
+            <div class="color-name">Success</div>
+            <div class="color-value">#00F5A0</div>
+            <div class="color-value">rgb(0, 245, 160)</div>
+            <button class="copy-btn" onclick="copyColor('#00F5A0')">Copy Hex</button>
+            <div class="color-description">Success states, confirmations</div>
+          </div>
+        </div>
+
+        <div class="color-card">
+          <div class="color-swatch" style="background: #FFD60A;"></div>
+          <div class="color-info">
+            <div class="color-name">Warning</div>
+            <div class="color-value">#FFD60A</div>
+            <div class="color-value">rgb(255, 214, 10)</div>
+            <button class="copy-btn" onclick="copyColor('#FFD60A')">Copy Hex</button>
+            <div class="color-description">Warnings, caution alerts</div>
+          </div>
+        </div>
+
+        <div class="color-card">
+          <div class="color-swatch" style="background: #FF006E;"></div>
+          <div class="color-info">
+            <div class="color-name">Error</div>
+            <div class="color-value">#FF006E</div>
+            <div class="color-value">rgb(255, 0, 110)</div>
+            <button class="copy-btn" onclick="copyColor('#FF006E')">Copy Hex</button>
+            <div class="color-description">Error states, validation failures</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Text Colors -->
+    <section class="section">
+      <h2 class="section-title">Text Colors</h2>
+      <div class="color-grid">
+        <div class="color-card">
+          <div class="color-swatch" style="background: #FFFFFF;"></div>
+          <div class="color-info">
+            <div class="color-name">Text Primary</div>
+            <div class="color-value">#FFFFFF</div>
+            <div class="color-value">rgb(255, 255, 255)</div>
+            <button class="copy-btn" onclick="copyColor('#FFFFFF')">Copy Hex</button>
+            <div class="color-description">Headlines, key content</div>
+          </div>
+        </div>
+
+        <div class="color-card">
+          <div class="color-swatch" style="background: #B4B4C8;"></div>
+          <div class="color-info">
+            <div class="color-name">Text Secondary</div>
+            <div class="color-value">#B4B4C8</div>
+            <div class="color-value">rgb(180, 180, 200)</div>
+            <button class="copy-btn" onclick="copyColor('#B4B4C8')">Copy Hex</button>
+            <div class="color-description">Body text, descriptions</div>
+          </div>
+        </div>
+
+        <div class="color-card">
+          <div class="color-swatch" style="background: #7C7C94;"></div>
+          <div class="color-info">
+            <div class="color-name">Text Tertiary</div>
+            <div class="color-value">#7C7C94</div>
+            <div class="color-value">rgb(124, 124, 148)</div>
+            <button class="copy-btn" onclick="copyColor('#7C7C94')">Copy Hex</button>
+            <div class="color-description">Metadata, timestamps</div>
+          </div>
+        </div>
+
+        <div class="color-card">
+          <div class="color-swatch" style="background: #4A4A5E;"></div>
+          <div class="color-info">
+            <div class="color-name">Text Muted</div>
+            <div class="color-value">#4A4A5E</div>
+            <div class="color-value">rgb(74, 74, 94)</div>
+            <button class="copy-btn" onclick="copyColor('#4A4A5E')">Copy Hex</button>
+            <div class="color-description">Disabled states, placeholders</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gradients -->
+    <section class="section">
+      <h2 class="section-title">Gradients</h2>
+      <div class="gradient-showcase">
+        <div class="gradient-card" style="background: linear-gradient(135deg, #00E5FF, #9D4EDD);">
+          <div class="gradient-name">Brand Gradient</div>
+        </div>
+        <div class="gradient-card" style="background: linear-gradient(135deg, #00E5FF, #00F5A0);">
+          <div class="gradient-name">Success Gradient</div>
+        </div>
+        <div class="gradient-card" style="background: linear-gradient(135deg, #9D4EDD, #FF006E);">
+          <div class="gradient-name">Vibrant Gradient</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Shadows -->
+    <section class="section">
+      <h2 class="section-title">Shadows</h2>
+      <div class="shadow-showcase">
+        <div class="shadow-card shadow-sm">Shadow SM</div>
+        <div class="shadow-card shadow-md">Shadow MD</div>
+        <div class="shadow-card shadow-lg">Shadow LG</div>
+        <div class="shadow-card shadow-xl">Shadow XL</div>
+        <div class="shadow-card shadow-glow-accent">Glow Accent</div>
+        <div class="shadow-card shadow-glow-purple">Glow Purple</div>
+      </div>
+    </section>
+
+    <!-- Usage Examples -->
+    <section class="section">
+      <div class="usage-example">
+        <div class="usage-title">CSS Variables</div>
+        <div class="code-block">:root {
+  /* Backgrounds */
+  --wallie-void: #0A0A0F;
+  --wallie-dark: #121218;
+  --wallie-darker: #1A1A24;
+  --wallie-slate: #242432;
+  --wallie-charcoal: #2D2D40;
+
+  /* Accents */
+  --wallie-accent: #00E5FF;
+  --wallie-purple: #9D4EDD;
+  --wallie-pink: #FF006E;
+
+  /* Text */
+  --wallie-text-primary: #FFFFFF;
+  --wallie-text-secondary: #B4B4C8;
+}</div>
+      </div>
+
+      <div class="usage-example">
+        <div class="usage-title">Tailwind Config</div>
+        <div class="code-block">colors: {
+  wallie: {
+    void: '#0A0A0F',
+    dark: '#121218',
+    darker: '#1A1A24',
+    accent: '#00E5FF',
+    purple: '#9D4EDD',
+    text: {
+      primary: '#FFFFFF',
+      secondary: '#B4B4C8',
+    }
+  }
+}</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    function copyColor(color) {
+      navigator.clipboard.writeText(color).then(() => {
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
