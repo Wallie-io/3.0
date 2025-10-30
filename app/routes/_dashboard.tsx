@@ -1,6 +1,8 @@
 import { Form, Link, Outlet, useLoaderData } from "react-router";
+import { useEffect } from "react";
 import type { Route } from "./+types/_dashboard";
-import { requireUserId, destroySession, getSession } from "~/lib/session.server";
+import { requireUserId, getSession } from "~/lib/session.server";
+import { ensureUserInDatabase } from "~/lib/sync.client";
 import { cn } from "~/lib/utils";
 
 /**
@@ -16,25 +18,18 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 /**
- * Action: Handle logout
- */
-export async function action({ request }: Route.ActionArgs) {
-  const formData = await request.formData();
-  const intent = formData.get("intent");
-
-  if (intent === "logout") {
-    return destroySession(request);
-  }
-
-  return null;
-}
-
-/**
  * Dashboard layout with sidebar and topbar
  * All routes nested under this layout are protected and require authentication
  */
 export default function DashboardLayout() {
-  const { email } = useLoaderData<typeof loader>();
+  const { userId, email } = useLoaderData<typeof loader>();
+
+  // Sync user to local database
+  useEffect(() => {
+    if (userId && email) {
+      ensureUserInDatabase(userId, email).catch(console.error);
+    }
+  }, [userId, email]);
 
   return (
     <div className="h-screen flex bg-gray-50">
@@ -42,7 +37,7 @@ export default function DashboardLayout() {
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
         {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-gray-200">
-          <h1 className="text-2xl font-bold text-wallie-accent">Wallie</h1>
+          <h1 className="text-2xl font-bold text-wallie-primary">Wallie</h1>
         </div>
 
         {/* Navigation */}
@@ -55,6 +50,12 @@ export default function DashboardLayout() {
           </NavLink>
           <NavLink to="/messages" icon="💬">
             Messages
+          </NavLink>
+          <NavLink to="/communities" icon="👥">
+            Communities
+          </NavLink>
+          <NavLink to="/hangouts" icon="🎙️">
+            Hangouts
           </NavLink>
         </nav>
 
@@ -71,8 +72,7 @@ export default function DashboardLayout() {
           </div>
 
           {/* Logout button */}
-          <Form method="post">
-            <input type="hidden" name="intent" value="logout" />
+          <Form method="post" action="/api/logout">
             <button
               type="submit"
               className={cn(

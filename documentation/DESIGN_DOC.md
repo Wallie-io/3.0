@@ -717,6 +717,118 @@ module.exports = {
 
 ---
 
+## Bento Grid Layouts
+
+### What is a Bento Grid?
+
+**Bento grids** (named after Japanese bento boxes) are asymmetric, modular grid layouts featuring mixed-size tiles that create visual hierarchy and dynamic compositions. They're a dominant 2025 design trend, perfect for dashboards, feeds, and content-heavy interfaces.
+
+**Why Bento Grids for Wallie:**
+- **Information Density** – Display multiple content types without overwhelming users
+- **Visual Interest** – Break monotony of traditional uniform grids
+- **Responsive by Nature** – Tiles reflow naturally on mobile devices
+- **Modern Aesthetic** – Fresh, dynamic alternative to boring layouts
+
+### Basic Bento Grid Pattern
+
+```html
+<!-- Dashboard Bento Layout -->
+<div class="grid grid-cols-12 gap-6 auto-rows-fr">
+  <!-- Hero Post (large, 2 rows × 8 cols) -->
+  <article class="col-span-12 lg:col-span-8 lg:row-span-2
+                  bg-wallie-darker rounded-2xl shadow-wallie-lg p-6">
+    <h2 class="text-[24px] font-bold text-wallie-text-primary">Featured Content</h2>
+    <p class="text-wallie-text-secondary mt-4">Large hero tile for important content</p>
+  </article>
+
+  <!-- Profile Widget (4 cols × 2 rows) -->
+  <aside class="col-span-12 lg:col-span-4 lg:row-span-2
+                bg-wallie-darker rounded-2xl shadow-wallie-lg p-6">
+    <div class="flex items-center gap-3">
+      <img src="/avatar.jpg" class="w-12 h-12 rounded-full" />
+      <div>
+        <h3 class="font-semibold text-wallie-text-primary">@username</h3>
+        <p class="text-sm text-wallie-text-tertiary">View Profile</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Regular Posts (4 cols each) -->
+  <article class="col-span-12 md:col-span-6 lg:col-span-4
+                  bg-wallie-darker rounded-2xl shadow-wallie-md p-4">
+    <p class="text-wallie-text-secondary">Post content 1</p>
+  </article>
+
+  <article class="col-span-12 md:col-span-6 lg:col-span-4
+                  bg-wallie-darker rounded-2xl shadow-wallie-md p-4">
+    <p class="text-wallie-text-secondary">Post content 2</p>
+  </article>
+
+  <!-- Trending Widget (4 cols) -->
+  <aside class="col-span-12 lg:col-span-4
+                bg-wallie-darker rounded-2xl shadow-wallie-md p-4">
+    <h3 class="font-semibold text-wallie-text-primary mb-2">Trending</h3>
+    <p class="text-sm text-wallie-text-tertiary">#Topic1, #Topic2</p>
+  </aside>
+</div>
+```
+
+### Use Cases for Wallie
+
+**Dashboard Home:**
+- Mix hero posts with smaller updates
+- Profile widgets alongside trending topics
+- Suggested users in varied tile sizes
+
+**Profile Pages:**
+- Large bio/stats tile with smaller post previews
+- Gallery-style photo grids with featured images
+
+**Explore Page:**
+- Featured content in large tiles
+- Discovery content in smaller tiles
+- Category widgets with dynamic sizing
+
+### Reference Examples
+
+See `/documentation/design-files/` for bento grid example images demonstrating various layouts and responsive behaviors.
+
+---
+
+## 2025 Design Trends
+
+### Trends Wallie Embraces
+
+**1. Bento Grid Layouts** ✅
+Asymmetric, modular grids for dynamic content organization (see above).
+
+**2. Glassmorphism Evolution** ✅
+Wallie's layered glass effects with selective blur and gradients are perfectly aligned with 2025's refined glassmorphism trend.
+
+**3. Dark-First Design** ✅
+Dark mode is no longer optional—it's the default. Wallie is dark-first by design with OLED-optimized blacks.
+
+**4. Brutalist Boldness** ✅
+Bold typography, high contrast, raw structure, and exposed grids are core to Wallie's aesthetic.
+
+**5. Micro-Interactions & Motion**
+Purposeful animations that enhance UX without distraction. Wallie uses smooth transitions, scale effects, and subtle hover states.
+
+**6. Minimalist Depth**
+Multi-layered shadows and soft neomorphic effects create depth without clutter. Wallie's shadow system achieves this perfectly.
+
+**7. Accessibility-First**
+2025 expects WCAG 2.2 compliance, keyboard navigation, and screen reader optimization as standard (see Accessibility section below).
+
+### Trends to Avoid
+
+- **Over-the-top 3D** – Can hurt performance and accessibility
+- **Excessive Animations** – Distracting, violates `prefers-reduced-motion`
+- **Neumorphism Overload** – Use sparingly for special elements only
+- **Light Mode as Default** – Dark mode is the modern standard
+
+---
+
 ## Accessibility
 
 ### Focus States

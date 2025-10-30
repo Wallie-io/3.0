@@ -8,6 +8,7 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { useDatabase } from "./lib/use-database";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -43,6 +44,33 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const { isReady, error } = useDatabase();
+
+  // Show loading state while database initializes
+  if (!isReady && !error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-wallie-primary border-r-transparent mb-4"></div>
+          <p className="text-gray-600">Initializing database...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if database failed to initialize
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center max-w-md p-6">
+          <h1 className="text-2xl font-bold text-red-600 mb-2">Database Error</h1>
+          <p className="text-gray-700 mb-4">Failed to initialize the local database.</p>
+          <p className="text-sm text-gray-500">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
+
   return <Outlet />;
 }
 

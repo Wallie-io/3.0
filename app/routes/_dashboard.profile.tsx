@@ -1,41 +1,70 @@
 import { Form, useLoaderData, useActionData } from "react-router";
 import type { Route } from "./+types/_dashboard.profile";
 import { getUserId, getSession } from "~/lib/session.server";
+import { getProfileByUserId, updateProfile, getPostsByUserId } from "~/lib/db.client";
 import { cn } from "~/lib/utils";
+import dayjs from "dayjs";
 
 /**
- * Loader: Fetch user profile data
- * In a real app, this would fetch from the local database (Electric-SQL)
+ * Server Loader: Get user ID and email from session
  */
 export async function loader({ request }: Route.LoaderArgs) {
   const userId = await getUserId(request);
   const session = await getSession(request);
   const email = session.get("email");
 
-  // TODO: Replace with actual Electric-SQL query
-  // Example: const profile = await db.profiles.findUnique({ where: { userId } })
-
-  // Mock data for demonstration
-  const profile = {
-    id: userId,
-    email,
-    displayName: email?.split("@")[0] || "User",
-    bio: "Local-first enthusiast 🚀",
-    location: "Decentralized Web",
-    website: "https://wallie.app",
-    joinedAt: "October 2025",
-  };
-
-  return { profile };
+  return { userId, email };
 }
 
 /**
- * Action: Handle profile updates
+ * Client Loader: Fetch profile from local database
  */
-export async function action({ request }: Route.ActionArgs) {
-  const userId = await getUserId(request);
+export async function clientLoader({ serverLoader }: Route.ClientLoaderArgs) {
+  const data = await serverLoader();
+  const { userId, email } = data as { userId: string | null; email: string | null };
+
+  if (!userId) {
+    return {
+      profile: {
+        display_name: "User",
+        bio: "",
+        location: "",
+        website: "",
+        created_at: new Date().toISOString(),
+      },
+      email: null,
+      postCount: 0
+    };
+  }
+
+  // Fetch profile from local database
+  const profile = await getProfileByUserId(userId);
+  const posts = await getPostsByUserId(userId);
+
+  const profileData = profile as any || {
+    display_name: email?.split("@")[0] || "User",
+    bio: "",
+    location: "",
+    website: "",
+    created_at: new Date().toISOString(),
+  };
+
+  return {
+    profile: profileData,
+    email,
+    postCount: posts.length,
+  };
+}
+
+clientLoader.hydrate = true;
+
+/**
+ * Client Action: Handle profile updates
+ */
+export async function clientAction({ request }: Route.ClientActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent");
+  const userId = formData.get("userId");
 
   if (intent === "update-profile") {
     const displayName = formData.get("displayName");
@@ -48,11 +77,17 @@ export async function action({ request }: Route.ActionArgs) {
       return { error: "Display name is required" };
     }
 
-    // TODO: Replace with actual Electric-SQL mutation
-    // Example: await db.profiles.update({
-    //   where: { userId },
-    //   data: { displayName, bio, location, website }
-    // })
+    if (typeof userId !== "string") {
+      return { error: "User not authenticated" };
+    }
+
+    // Update profile in local database
+    await updateProfile(userId, {
+      displayName,
+      bio: typeof bio === "string" ? bio : undefined,
+      location: typeof location === "string" ? location : undefined,
+      website: typeof website === "string" ? website : undefined,
+    });
 
     return { success: true, message: "Profile updated successfully!" };
   }
@@ -68,8 +103,9 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Profile() {
-  const { profile } = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
+  const { userId } = useLoaderData<typeof loader>();
+  const { profile, email, postCount } = useLoaderData<typeof clientLoader>();
+  const actionData = useActionData<typeof clientAction>();
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -77,27 +113,29 @@ export default function Profile() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="flex items-center gap-6">
           <div className="w-24 h-24 rounded-full bg-wallie-accent flex items-center justify-center text-white text-3xl font-bold">
-            {profile.displayName[0].toUpperCase()}
+            {profile.display_name?.[0]?.toUpperCase() || "U"}
           </div>
 
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900">{profile.displayName}</h1>
-            <p className="text-gray-600">{profile.email}</p>
-            <p className="text-sm text-gray-500 mt-1">Joined {profile.joinedAt}</p>
+            <h1 className="text-2xl font-bold text-gray-900">{profile.display_name || "User"}</h1>
+            <p className="text-gray-600">{email}</p>
+            <p className="text-sm text-gray-500 mt-1">
+              Joined {dayjs(profile.created_at).format("MMMM YYYY")}
+            </p>
           </div>
         </div>
 
         <div className="mt-6 grid grid-cols-3 gap-4 pt-6 border-t border-gray-200">
           <div className="text-center">
-            <p className="text-2xl font-bold text-gray-900">42</p>
+            <p className="text-2xl font-bold text-gray-900">{postCount}</p>
             <p className="text-sm text-gray-600">Posts</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-gray-900">128</p>
+            <p className="text-2xl font-bold text-gray-900">0</p>
             <p className="text-sm text-gray-600">Followers</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-gray-900">86</p>
+            <p className="text-2xl font-bold text-gray-900">0</p>
             <p className="text-sm text-gray-600">Following</p>
           </div>
         </div>
@@ -107,8 +145,9 @@ export default function Profile() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-6">Edit Profile</h2>
 
-        <Form method="post" className="space-y-4">
+        <Form method="post" className="space-y-4" reloadDocument>
           <input type="hidden" name="intent" value="update-profile" />
+          <input type="hidden" name="userId" value={userId || ""} />
 
           {/* Success message */}
           {actionData?.success && (
@@ -133,7 +172,7 @@ export default function Profile() {
               type="text"
               id="displayName"
               name="displayName"
-              defaultValue={profile.displayName}
+              defaultValue={profile.display_name || ""}
               required
               className={cn(
                 "w-full px-4 py-2 rounded-lg border border-gray-300",
@@ -151,7 +190,7 @@ export default function Profile() {
               id="bio"
               name="bio"
               rows={3}
-              defaultValue={profile.bio}
+              defaultValue={profile.bio || ""}
               className={cn(
                 "w-full px-4 py-2 rounded-lg border border-gray-300",
                 "focus:outline-none focus:ring-2 focus:ring-wallie-accent focus:border-transparent",
@@ -169,7 +208,7 @@ export default function Profile() {
               type="text"
               id="location"
               name="location"
-              defaultValue={profile.location}
+              defaultValue={profile.location || ""}
               className={cn(
                 "w-full px-4 py-2 rounded-lg border border-gray-300",
                 "focus:outline-none focus:ring-2 focus:ring-wallie-accent focus:border-transparent"
@@ -186,7 +225,7 @@ export default function Profile() {
               type="url"
               id="website"
               name="website"
-              defaultValue={profile.website}
+              defaultValue={profile.website || ""}
               className={cn(
                 "w-full px-4 py-2 rounded-lg border border-gray-300",
                 "focus:outline-none focus:ring-2 focus:ring-wallie-accent focus:border-transparent"
@@ -200,8 +239,8 @@ export default function Profile() {
             type="submit"
             className={cn(
               "px-6 py-2 rounded-lg font-medium",
-              "bg-wallie-accent text-white",
-              "hover:bg-wallie-accent-dim",
+              "bg-wallie-primary text-white",
+              "hover:bg-wallie-primary-hover",
               "focus:outline-none focus:ring-2 focus:ring-wallie-accent focus:ring-offset-2",
               "transition-colors duration-200"
             )}

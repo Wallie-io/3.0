@@ -64,6 +64,40 @@ This directory contains interactive design references and visual examples for th
 
 ---
 
+### 3. Bento Grid Example Images
+
+**Visual references for 2025 design trends**
+
+**What it contains:**
+- 5 high-quality example images demonstrating bento grid layouts
+- Dashboard layouts with asymmetric tile arrangements
+- Analytics and data visualization using bento patterns
+- UI design inspirations for mixed-size content grids
+
+**Files:**
+- `bento-grid-example-1.jpg` – Modern dashboard with varied tile sizes
+- `bento-grid-example-2.jpg` – Data visualization bento layout
+- `bento-grid-example-3.jpg` – Analytics interface with modular grids
+- `bento-grid-dashboard-ui.jpg` – Dashboard UI with hero content tiles
+- `bento-grid-analytics.jpg` – Analytics bento grid arrangement
+
+**How to use:**
+1. Reference these images when designing dashboard layouts
+2. Use as inspiration for asymmetric grid compositions
+3. Study tile sizing patterns and spacing
+4. Apply similar patterns to Wallie's feed, profile, and explore pages
+
+**Best for:**
+- Designing the Wallie dashboard home page
+- Creating dynamic profile layouts
+- Planning the explore/discovery interface
+- Understanding visual hierarchy in grid layouts
+
+**Related documentation:**
+See the "Bento Grid Layouts" section in [DESIGN_DOC.md](../DESIGN_DOC.md) for implementation code and Tailwind examples.
+
+---
+
 ## How to Use These Files
 
 ### For Designers

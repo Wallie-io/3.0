@@ -20,6 +20,8 @@ We believe social networks should be resilient, private, and user-controlled. Wa
 
 - **Social Feed** - Share updates, photos, and thoughts with your network
 - **Private Messaging** - End-to-end encrypted conversations
+- **Communities** - Create and join interest-based groups with your peers
+- **Hangouts/Huddles** - Audio-only and video live sessions with friends and communities
 - **Local Data Control** - All content stored in your browser's local database
 - **Offline-First** - Use Wallie without an internet connection
 - **Peer Discovery** - Find and connect with friends through distributed protocols
@@ -78,7 +80,26 @@ We believe social networks should be resilient, private, and user-controlled. Wa
 - [ ] Create peer discovery mechanism
 - [ ] Optimize bandwidth usage
 
-### Phase 7: Polish & Launch 📋
+### Phase 7: Communities 📋
+- [ ] Design community data structure and schema
+- [ ] Build community creation and discovery interface
+- [ ] Implement community membership management
+- [ ] Add community-specific feeds and posts
+- [ ] Create community moderation tools
+- [ ] Build community settings and customization
+- [ ] Implement community search and filtering
+
+### Phase 8: Hangouts/Huddles 📋
+- [ ] Integrate WebRTC for real-time audio/video
+- [ ] Build audio-only hangout rooms
+- [ ] Add video hangout support with camera toggle
+- [ ] Implement peer-to-peer voice/video connections
+- [ ] Create hangout room management interface
+- [ ] Add screen sharing capabilities
+- [ ] Build hangout scheduling and notifications
+- [ ] Implement recording and playback (optional)
+
+### Phase 9: Polish & Launch 📋
 - [ ] Performance optimization
 - [ ] Accessibility audit (WCAG 2.1 AA)
 - [ ] Mobile responsive design refinement

@@ -11,7 +11,7 @@ export default function AuthLayout() {
       <div className="w-full max-w-md p-8">
         {/* Wallie Logo/Brand */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-wallie-accent mb-2">Wallie</h1>
+          <h1 className="text-4xl font-bold text-wallie-primary mb-2">Wallie</h1>
           <p className="text-gray-600">Your local-first social network</p>
         </div>
 

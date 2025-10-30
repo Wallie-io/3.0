@@ -11,6 +11,11 @@
   --color-wallie-slate: #242432;
   --color-wallie-charcoal: #2d2d40;
 
+  /* Primary colors (accessible for text/buttons) */
+  --color-wallie-primary: #0e7490;
+  --color-wallie-primary-hover: #0891b2;
+
+  /* Accent colors (decorative, non-text use) */
   --color-wallie-accent: #00e5ff;
   --color-wallie-accent-dim: #00a8cc;
   --color-wallie-accent-glow: #00e5ff40;

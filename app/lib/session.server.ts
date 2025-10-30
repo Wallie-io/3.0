@@ -4,10 +4,17 @@ import { createCookieSessionStorage, redirect } from "react-router";
 export interface SessionData {
   userId: string;
   email?: string;
+  challenge?: string;  // For WebAuthn registration/authentication
+  username?: string;   // Temporary storage during registration
 }
 
 export interface SessionFlashData {
   error: string;
+}
+
+// Export commit method
+export async function commitSession(session: any) {
+  return sessionStorage.commitSession(session);
 }
 
 // In production, set SESSION_SECRET in your environment variables

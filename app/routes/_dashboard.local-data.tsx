@@ -1,36 +1,52 @@
 import { Form, useLoaderData, useActionData } from "react-router";
 import type { Route } from "./+types/_dashboard.local-data";
+import { getUserId } from "~/lib/session.server";
+import { getAllPosts, createPost, getDb } from "~/lib/db.client";
 import { cn } from "~/lib/utils";
+import dayjs from "dayjs";
+
+/**
+ * Server Loader: Get user ID from session
+ */
+export async function loader({ request }: Route.LoaderArgs) {
+  const userId = await getUserId(request);
+  return { userId };
+}
 
 /**
  * CLIENT LOADER EXAMPLE
  *
  * Client loaders run in the browser and can access:
+ * - PGlite (Postgres WASM) local database
  * - IndexedDB
- * - Electric-SQL local database
  * - localStorage/sessionStorage
  * - Browser APIs
  *
  * This enables offline-first functionality and instant data access
  */
-export async function clientLoader({ request }: Route.ClientLoaderArgs) {
-  // TODO: Replace with actual Electric-SQL query
-  // Example:
-  // import { db } from '~/lib/electric'
-  // const localPosts = await db.posts.findMany({
-  //   where: { authorId: currentUserId },
-  //   orderBy: { createdAt: 'desc' }
-  // })
+export async function clientLoader({ serverLoader }: Route.ClientLoaderArgs) {
+  const data = await serverLoader();
+  const { userId } = data as { userId: string | null };
 
-  // Simulate local database query
+  // Query local PGlite database
+  const posts = await getAllPosts();
+
+  // Get sync status
+  const database = await getDb();
+  const totalPostsResult = await database.query("SELECT COUNT(*) FROM posts");
+  const unsyncedPostsResult = await database.query(
+    "SELECT COUNT(*) FROM posts WHERE synced = false"
+  );
+
   const localData = {
-    posts: [
-      { id: "1", title: "Local-first Post", synced: true },
-      { id: "2", title: "Offline Draft", synced: false },
-    ],
+    posts: posts.map((post: any) => ({
+      id: post.id,
+      title: post.content.substring(0, 50) + (post.content.length > 50 ? "..." : ""),
+      synced: post.synced,
+    })),
     syncStatus: {
       lastSync: new Date().toISOString(),
-      pendingChanges: 2,
+      pendingChanges: parseInt((unsyncedPostsResult.rows[0] as any).count),
       isOnline: navigator.onLine,
     },
   };
@@ -48,7 +64,7 @@ clientLoader.hydrate = true;
  * CLIENT ACTION EXAMPLE
  *
  * Client actions run in the browser and can:
- * - Mutate local database (Electric-SQL)
+ * - Mutate local PGlite database
  * - Update IndexedDB
  * - Trigger background sync
  * - Provide optimistic UI updates
@@ -57,29 +73,25 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent");
   const title = formData.get("title");
+  const userId = formData.get("userId");
 
   if (intent === "create-local-post") {
     if (typeof title !== "string" || title.trim().length === 0) {
       return { error: "Title is required" };
     }
 
-    // TODO: Replace with actual Electric-SQL mutation
-    // Example:
-    // await db.posts.create({
-    //   data: {
-    //     id: crypto.randomUUID(),
-    //     title,
-    //     authorId: currentUserId,
-    //     createdAt: new Date(),
-    //     synced: false
-    //   }
-    // })
+    if (typeof userId !== "string") {
+      return { error: "User not authenticated" };
+    }
 
-    // Simulate local database write
-    console.log("Creating local post:", title);
+    // Create post in local PGlite database
+    await createPost(userId, title);
+
+    console.log("✅ Post created in local database");
 
     // Trigger background sync if online
     if (navigator.onLine) {
+      console.log("🌐 Online - would trigger sync here");
       // await syncWithPeers()
     }
 
@@ -87,7 +99,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   }
 
   if (intent === "sync-now") {
-    // TODO: Trigger manual sync
+    console.log("🔄 Manual sync triggered");
+    // TODO: Implement peer-to-peer sync
     // Example:
     // await electric.sync()
 
@@ -105,6 +118,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function LocalDataExample() {
+  const { userId } = useLoaderData<typeof loader>();
   const data = useLoaderData<typeof clientLoader>();
   const actionData = useActionData<typeof clientAction>();
 
@@ -131,8 +145,8 @@ export default function LocalDataExample() {
               type="submit"
               className={cn(
                 "px-4 py-2 rounded-lg text-sm font-medium",
-                "bg-wallie-accent text-white",
-                "hover:bg-wallie-accent-dim",
+                "bg-wallie-primary text-white",
+                "hover:bg-wallie-primary-hover",
                 "transition-colors duration-200"
               )}
             >
@@ -160,7 +174,7 @@ export default function LocalDataExample() {
 
           <div className="p-4 bg-gray-50 rounded-lg">
             <p className="text-xs font-mono text-gray-900">
-              {new Date(data.syncStatus.lastSync).toLocaleTimeString()}
+              {dayjs(data.syncStatus.lastSync).format("h:mm:ss A")}
             </p>
             <p className="text-sm text-gray-600 mt-1">Last Sync</p>
           </div>
@@ -171,8 +185,9 @@ export default function LocalDataExample() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Create Local Post</h2>
 
-        <Form method="post" className="space-y-4">
+        <Form method="post" className="space-y-4" reloadDocument>
           <input type="hidden" name="intent" value="create-local-post" />
+          <input type="hidden" name="userId" value={userId || ""} />
 
           {/* Success/Error messages */}
           {actionData?.success && (
@@ -201,8 +216,8 @@ export default function LocalDataExample() {
             type="submit"
             className={cn(
               "px-6 py-2 rounded-lg font-medium",
-              "bg-wallie-accent text-white",
-              "hover:bg-wallie-accent-dim",
+              "bg-wallie-primary text-white",
+              "hover:bg-wallie-primary-hover",
               "transition-colors duration-200"
             )}
           >
@@ -250,8 +265,11 @@ export default function LocalDataExample() {
             <h3 className="font-semibold text-gray-900 mb-2">Client Loader (Browser-side)</h3>
             <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
               <code>{`export async function clientLoader() {
-  // Runs in browser, accesses local database
-  const posts = await db.posts.findMany()
+  // Runs in browser with PGlite (Postgres WASM)
+  const posts = await getAllPosts()
+  const unsyncedCount = await db.query(
+    "SELECT COUNT(*) FROM posts WHERE synced = false"
+  )
   return { posts, syncStatus }
 }`}</code>
             </pre>
@@ -261,9 +279,11 @@ export default function LocalDataExample() {
             <h3 className="font-semibold text-gray-900 mb-2">Client Action (Browser-side)</h3>
             <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
               <code>{`export async function clientAction({ request }) {
-  // Runs in browser, mutates local data
-  await db.posts.create({ data: newPost })
-  await syncWithPeers()
+  // Runs in browser, writes to local PGlite database
+  await createPost(userId, content)
+  if (navigator.onLine) {
+    await syncWithPeers()
+  }
   return { success: true }
 }`}</code>
             </pre>

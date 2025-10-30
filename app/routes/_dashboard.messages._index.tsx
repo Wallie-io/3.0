@@ -1,50 +1,59 @@
 import { Link, useLoaderData } from "react-router";
 import type { Route } from "./+types/_dashboard.messages._index";
 import { getUserId } from "~/lib/session.server";
+import { getThreadsForUser } from "~/lib/db.client";
 import { cn } from "~/lib/utils";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+
+// Enable relative time plugin
+dayjs.extend(relativeTime);
 
 /**
- * Loader: Fetch message threads/conversations
- * In a real app, this would fetch from Electric-SQL
+ * Server Loader: Get user ID from session
  */
 export async function loader({ request }: Route.LoaderArgs) {
   const userId = await getUserId(request);
+  return { userId };
+}
 
-  // TODO: Replace with actual Electric-SQL query
-  // Example: const threads = await db.threads.findMany({
-  //   where: { participants: { some: { userId } } },
-  //   orderBy: { lastMessageAt: 'desc' }
-  // })
+/**
+ * Client Loader: Fetch message threads from local database
+ */
+export async function clientLoader({ serverLoader }: Route.ClientLoaderArgs) {
+  const data = await serverLoader();
+  const { userId } = data as { userId: string | null };
 
-  // Mock data for demonstration
-  const threads = [
-    {
-      id: "alice",
-      recipientName: "Alice",
-      recipientAvatar: "A",
-      lastMessage: "The E2E encryption is really impressive!",
-      lastMessageTime: "2 min ago",
-      unread: true,
-    },
-    {
-      id: "bob",
-      recipientName: "Bob",
-      recipientAvatar: "B",
-      lastMessage: "See you at the meetup!",
-      lastMessageTime: "1 hour ago",
-      unread: false,
-    },
-    {
-      id: "charlie",
-      recipientName: "Charlie",
-      recipientAvatar: "C",
-      lastMessage: "Thanks for the help!",
-      lastMessageTime: "Yesterday",
-      unread: false,
-    },
-  ];
+  if (!userId) {
+    return { threads: [] };
+  }
 
-  return { threads };
+  // Fetch threads from local database
+  const threads = await getThreadsForUser(userId);
+
+  // Format threads for display
+  const formattedThreads = threads.map((thread: any) => ({
+    id: thread.id,
+    recipientName: thread.recipient_name || "Unknown",
+    recipientAvatar: thread.recipient_name?.[0]?.toUpperCase() || "?",
+    recipientId: thread.recipient_id,
+    lastMessage: thread.last_message || "No messages yet",
+    lastMessageTime: thread.last_message_time
+      ? formatTimestamp(thread.last_message_time)
+      : "",
+    unread: false, // TODO: Implement unread tracking
+  }));
+
+  return { threads: formattedThreads };
+}
+
+clientLoader.hydrate = true;
+
+/**
+ * Format timestamp to human-readable string using day.js
+ */
+function formatTimestamp(timestamp: string): string {
+  return dayjs(timestamp).fromNow();
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -55,7 +64,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function MessagesList() {
-  const { threads } = useLoaderData<typeof loader>();
+  const { threads } = useLoaderData<typeof clientLoader>();
 
   return (
     <div className="max-w-4xl mx-auto">

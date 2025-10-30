@@ -1,78 +1,98 @@
-import { Form, useLoaderData, useParams, useActionData, Link } from "react-router";
+import { Form, useLoaderData, useActionData, Link } from "react-router";
 import type { Route } from "./+types/_dashboard.messages.$threadId";
 import { getUserId } from "~/lib/session.server";
+import { getMessagesByThreadId, createMessage, getDb } from "~/lib/db.client";
 import { cn } from "~/lib/utils";
+import dayjs from "dayjs";
 
 /**
- * Loader: Fetch messages for a specific thread
- * In a real app, this would fetch from Electric-SQL with E2EE decryption
+ * Server Loader: Get user ID and thread ID
  */
 export async function loader({ request, params }: Route.LoaderArgs) {
   const userId = await getUserId(request);
   const { threadId } = params;
-
-  // TODO: Replace with actual Electric-SQL query
-  // Example: const messages = await db.messages.findMany({
-  //   where: { threadId },
-  //   orderBy: { createdAt: 'asc' }
-  // })
-
-  // Mock data for demonstration
-  const thread = {
-    id: threadId,
-    recipientName: threadId === "alice" ? "Alice" : "Bob",
-    recipientAvatar: threadId === "alice" ? "A" : "B",
-  };
-
-  const messages = [
-    {
-      id: "1",
-      content: "Hey! How are you?",
-      senderId: threadId,
-      timestamp: "10:30 AM",
-      isCurrentUser: false,
-    },
-    {
-      id: "2",
-      content: "I'm great! Just exploring this new local-first platform.",
-      senderId: userId || "me",
-      timestamp: "10:32 AM",
-      isCurrentUser: true,
-    },
-    {
-      id: "3",
-      content: "The E2E encryption is really impressive!",
-      senderId: threadId,
-      timestamp: "10:33 AM",
-      isCurrentUser: false,
-    },
-  ];
-
-  return { thread, messages, userId };
+  return { userId, threadId };
 }
 
 /**
- * Action: Send a new message
- * In a real app, this would encrypt the message and store it locally
+ * Client Loader: Fetch messages from local database
  */
-export async function action({ request, params }: Route.ActionArgs) {
-  const userId = await getUserId(request);
+export async function clientLoader({ params, serverLoader }: Route.ClientLoaderArgs) {
+  const data = await serverLoader();
+  const { userId, threadId } = data as { userId: string | null; threadId: string };
+
+  if (!userId || !threadId) {
+    return {
+      thread: {
+        id: "",
+        recipientName: "Unknown",
+        recipientAvatar: "?",
+        recipientId: "",
+      },
+      messages: []
+    };
+  }
+
+  // Fetch messages from local database
+  const messages = await getMessagesByThreadId(threadId, userId);
+
+  // Get thread participant info
+  const database = await getDb();
+  const participantResult = await database.query(
+    `
+    SELECT pr.display_name, pr.user_id
+    FROM thread_participants tp
+    JOIN profiles pr ON tp.user_id = pr.user_id
+    WHERE tp.thread_id = $1 AND tp.user_id != $2
+    LIMIT 1
+  `,
+    [threadId, userId]
+  );
+
+  const participant = participantResult.rows[0] as any;
+
+  const thread = {
+    id: threadId,
+    recipientName: participant?.display_name || "Unknown",
+    recipientAvatar: participant?.display_name?.[0]?.toUpperCase() || "?",
+    recipientId: participant?.user_id || "",
+  };
+
+  // Format messages for display
+  const formattedMessages = messages.map((msg: any) => ({
+    id: msg.id,
+    content: msg.content,
+    senderId: msg.sender_id,
+    timestamp: dayjs(msg.created_at).format("h:mm A"),
+    isCurrentUser: msg.is_current_user,
+  }));
+
+  return { thread, messages: formattedMessages };
+}
+
+clientLoader.hydrate = true;
+
+/**
+ * Client Action: Send a new message
+ */
+export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { threadId } = params;
   const formData = await request.formData();
   const content = formData.get("content");
   const intent = formData.get("intent");
+  const userId = formData.get("userId");
 
   if (intent === "send-message") {
     if (typeof content !== "string" || content.trim().length === 0) {
       return { error: "Message cannot be empty" };
     }
 
-    // TODO: Replace with actual Electric-SQL mutation with E2EE
-    // Example:
-    // const encrypted = await encrypt(content, recipientPublicKey)
-    // await db.messages.create({
-    //   data: { content: encrypted, threadId, senderId: userId }
-    // })
+    if (typeof userId !== "string" || !threadId) {
+      return { error: "Invalid request" };
+    }
+
+    // Create message in local database
+    await createMessage(threadId, userId, content);
 
     return { success: true, message: "Message sent!" };
   }
@@ -88,8 +108,17 @@ export function meta({ params }: Route.MetaArgs) {
 }
 
 export default function Messages() {
-  const { thread, messages } = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
+  const { userId } = useLoaderData<typeof loader>();
+  const { thread, messages } = useLoaderData<typeof clientLoader>();
+  const actionData = useActionData<typeof clientAction>();
+
+  if (!thread) {
+    return (
+      <div className="max-w-4xl mx-auto p-6 text-center">
+        <p className="text-gray-500">Thread not found</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto h-full flex flex-col">
@@ -123,7 +152,7 @@ export default function Messages() {
               className={cn(
                 "max-w-md px-4 py-3 rounded-2xl",
                 message.isCurrentUser
-                  ? "bg-wallie-accent text-white rounded-br-sm"
+                  ? "bg-wallie-primary text-white rounded-br-sm"
                   : "bg-gray-100 text-gray-900 rounded-bl-sm"
               )}
             >
@@ -149,8 +178,9 @@ export default function Messages() {
           </div>
         )}
 
-        <Form method="post" className="flex gap-3">
+        <Form method="post" className="flex gap-3" reloadDocument>
           <input type="hidden" name="intent" value="send-message" />
+          <input type="hidden" name="userId" value={userId || ""} />
 
           <input
             type="text"
@@ -168,8 +198,8 @@ export default function Messages() {
             type="submit"
             className={cn(
               "px-6 py-3 rounded-lg font-medium",
-              "bg-wallie-accent text-white",
-              "hover:bg-wallie-accent-dim",
+              "bg-wallie-primary text-white",
+              "hover:bg-wallie-primary-hover",
               "focus:outline-none focus:ring-2 focus:ring-wallie-accent focus:ring-offset-2",
               "transition-colors duration-200"
             )}
