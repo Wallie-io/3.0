@@ -1,5 +1,5 @@
 import { Form, Link, Outlet, useLoaderData } from "react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Route } from "./+types/_dashboard";
 import { requireUserId, getSession } from "~/lib/session.server";
 import { ensureUserInDatabase } from "~/lib/sync.client";
@@ -23,25 +23,42 @@ export async function loader({ request }: Route.LoaderArgs) {
  */
 export default function DashboardLayout() {
   const { userId, email } = useLoaderData<typeof loader>();
+  const [isSyncing, setIsSyncing] = useState(true);
+  const [hasSynced, setHasSynced] = useState(false);
 
   // Sync user to local database
   useEffect(() => {
+    // Only run once
+    if (hasSynced) return;
+
     if (userId && email) {
-      ensureUserInDatabase(userId, email).catch(console.error);
+      ensureUserInDatabase(userId, email)
+        .then(() => {
+          setIsSyncing(false);
+          setHasSynced(true);
+        })
+        .catch((error) => {
+          console.error("Failed to sync user:", error);
+          setIsSyncing(false);
+          setHasSynced(true);
+        });
+    } else {
+      setIsSyncing(false);
+      setHasSynced(true);
     }
-  }, [userId, email]);
+  }, [userId, email, hasSynced]);
 
   return (
-    <div className="h-screen flex bg-gray-50">
+    <div className="h-screen flex bg-wallie-dark">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+      <aside className="w-64 bg-wallie-darker/70 backdrop-blur-xl border-r border-wallie-charcoal/50 flex flex-col">
         {/* Logo */}
-        <div className="h-16 flex items-center px-6 border-b border-gray-200">
-          <h1 className="text-2xl font-bold text-wallie-primary">Wallie</h1>
+        <div className="h-16 flex items-center px-6 border-b border-wallie-charcoal/50">
+          <h1 className="text-[24px] font-bold text-wallie-accent tracking-tight font-display">Wallie</h1>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-6 space-y-1">
+        <nav className="flex-1 px-4 py-6 space-y-2">
           <NavLink to="/" icon="🏠">
             Home
           </NavLink>
@@ -60,14 +77,17 @@ export default function DashboardLayout() {
         </nav>
 
         {/* User section */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-wallie-charcoal/50">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-wallie-accent flex items-center justify-center text-white font-bold">
+            <div className="w-10 h-10 rounded-full bg-wallie-accent flex items-center justify-center text-wallie-dark font-bold shadow-wallie-glow-accent">
               {email?.[0]?.toUpperCase() || "U"}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{email || "User"}</p>
-              <p className="text-xs text-gray-500">Online</p>
+              <p className="text-sm font-medium text-wallie-text-primary truncate">{email || "User"}</p>
+              <p className="text-xs text-wallie-text-tertiary">
+                <span className="inline-block w-2 h-2 rounded-full bg-wallie-success mr-1.5" />
+                Online
+              </p>
             </div>
           </div>
 
@@ -77,8 +97,9 @@ export default function DashboardLayout() {
               type="submit"
               className={cn(
                 "w-full py-2 px-4 rounded-lg text-sm font-medium",
-                "text-gray-700 hover:bg-gray-100",
-                "transition-colors duration-200"
+                "text-wallie-text-secondary hover:text-wallie-text-primary",
+                "hover:bg-wallie-charcoal/50",
+                "transition-all duration-200"
               )}
             >
               Sign Out
@@ -90,16 +111,16 @@ export default function DashboardLayout() {
       {/* Main content area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-          <h2 className="text-xl font-semibold text-gray-900">Dashboard</h2>
+        <header className="h-16 bg-wallie-darker/70 backdrop-blur-xl border-b border-wallie-charcoal/50 flex items-center justify-between px-6">
+          <h2 className="text-xl font-semibold text-wallie-text-primary">Dashboard</h2>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {/* Placeholder for search, notifications, etc. */}
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              🔔
+            <button className="w-10 h-10 flex items-center justify-center hover:bg-wallie-charcoal/50 rounded-lg transition-colors">
+              <span className="text-xl">🔔</span>
             </button>
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              ⚙️
+            <button className="w-10 h-10 flex items-center justify-center hover:bg-wallie-charcoal/50 rounded-lg transition-colors">
+              <span className="text-xl">⚙️</span>
             </button>
           </div>
         </header>
@@ -125,14 +146,20 @@ function NavLink({
   icon: string;
   children: React.ReactNode;
 }) {
+  // TODO: Implement proper active state detection with useLocation or similar
+  // For now, using a simple check based on pathname
+  const isActive = typeof window !== "undefined" && window.location.pathname === to;
+
   return (
     <Link
       to={to}
       className={cn(
         "flex items-center gap-3 px-4 py-3 rounded-lg",
-        "text-gray-700 hover:bg-gray-100",
-        "transition-colors duration-200",
-        "font-medium text-sm"
+        "font-medium text-sm",
+        "transition-all duration-200",
+        isActive
+          ? "bg-wallie-accent text-wallie-dark shadow-wallie-glow-accent"
+          : "text-wallie-text-secondary hover:text-wallie-text-primary hover:bg-wallie-charcoal/50"
       )}
     >
       <span className="text-xl">{icon}</span>

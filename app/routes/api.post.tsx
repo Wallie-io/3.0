@@ -1,5 +1,5 @@
 import { redirect } from "react-router";
-import { createPost } from "~/lib/db.client";
+import { createPost, getUserById } from "~/lib/db.client";
 
 /**
  * Client Action: Handle post creation in local database
@@ -21,12 +21,21 @@ export async function clientAction({ request }: { request: Request }) {
   // Validate userId
   if (typeof userId !== "string" || userId.trim().length === 0) {
     return {
-      error: "User not authenticated",
+      error: "User not authenticated. Please refresh the page and try again.",
       success: false,
     };
   }
 
   try {
+    // Check if user exists in local database
+    const user = await getUserById(userId);
+    if (!user) {
+      return {
+        error: "User not found in local database. Please refresh the page and try again.",
+        success: false,
+      };
+    }
+
     // Create post in local database (PGlite)
     await createPost(userId, content.trim());
 
@@ -38,7 +47,7 @@ export async function clientAction({ request }: { request: Request }) {
   } catch (error) {
     console.error("Failed to create post:", error);
     return {
-      error: "Failed to create post. Please try again.",
+      error: `Failed to create post: ${error instanceof Error ? error.message : "Unknown error"}`,
       success: false,
     };
   }

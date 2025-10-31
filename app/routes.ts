@@ -16,6 +16,7 @@ export default [
     route("messages/:threadId", "routes/_dashboard.messages.$threadId.tsx"),
     route("communities", "routes/_dashboard.communities._index.tsx"),
     route("communities/:communitySlug", "routes/_dashboard.communities.$communitySlug.tsx"),
+    route("hangouts", "routes/_dashboard.hangouts._index.tsx"),
   ]),
 
   // API routes (resource routes)

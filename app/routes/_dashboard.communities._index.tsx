@@ -157,9 +157,9 @@ export default function CommunitiesIndex({ loaderData }: Route.ComponentProps) {
         {/* Main Feed */}
         <div className="lg:col-span-2 space-y-4">
           {/* Header with filters */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-wallie-darker/70 backdrop-blur-xl rounded-2xl shadow-wallie-lg border border-white/10 p-6">
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-gray-900">Popular Posts</h1>
+              <h1 className="text-2xl font-bold text-wallie-text-primary">Popular Posts</h1>
               <div className="flex gap-2">
                 <FilterButton active>Hot 🔥</FilterButton>
                 <FilterButton>New ✨</FilterButton>
@@ -180,17 +180,19 @@ export default function CommunitiesIndex({ loaderData }: Route.ComponentProps) {
           <Link
             to="/communities/create"
             className={cn(
-              "block w-full py-3 px-4 rounded-lg text-center font-medium",
-              "bg-wallie-accent text-white hover:bg-wallie-accent-dim",
-              "transition-colors duration-200"
+              "block w-full py-3 px-6 rounded-lg text-center font-semibold",
+              "bg-wallie-accent text-wallie-dark",
+              "shadow-wallie-glow-accent",
+              "hover:bg-wallie-accent/90 hover:shadow-wallie-xl",
+              "transition-all duration-200"
             )}
           >
             + Create Community
           </Link>
 
           {/* Top Communities */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Top Communities</h2>
+          <div className="bg-wallie-darker/70 backdrop-blur-xl rounded-2xl shadow-wallie-lg border border-white/10 p-6">
+            <h2 className="text-lg font-bold text-wallie-text-primary mb-4">Top Communities</h2>
             <div className="space-y-3">
               {topCommunities.map((community, index) => (
                 <CommunityCard key={community.id} community={community} rank={index + 1} />
@@ -199,9 +201,9 @@ export default function CommunitiesIndex({ loaderData }: Route.ComponentProps) {
           </div>
 
           {/* User's Communities (placeholder) */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Your Communities</h2>
-            <p className="text-sm text-gray-500 text-center py-4">
+          <div className="bg-wallie-darker/70 backdrop-blur-xl rounded-2xl shadow-wallie-lg border border-white/10 p-6">
+            <h2 className="text-lg font-bold text-wallie-text-primary mb-4">Your Communities</h2>
+            <p className="text-sm text-wallie-text-secondary text-center py-4">
               Join some communities to see them here!
             </p>
           </div>
@@ -216,68 +218,70 @@ export default function CommunitiesIndex({ loaderData }: Route.ComponentProps) {
  */
 function PostCard({ post }: { post: any }) {
   return (
-    <article className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
-      <div className="p-4">
-        {/* Community header */}
-        <div className="flex items-center gap-2 mb-3">
-          <Link
-            to={`/communities/${post.communitySlug}`}
-            className="flex items-center gap-2 hover:underline"
-          >
-            <span className="text-2xl">{post.communityIcon}</span>
-            <span className="font-medium text-gray-900">c/{post.communitySlug}</span>
-          </Link>
-          <span className="text-gray-400">•</span>
-          <span className="text-sm text-gray-500">
-            Posted by {post.authorName} {dayjs(post.createdAt).fromNow()}
-          </span>
-          {post.isPinned && (
-            <span className="ml-auto px-2 py-1 text-xs font-medium bg-wallie-accent/10 text-wallie-accent rounded">
-              📌 Pinned
-            </span>
-          )}
-        </div>
-
-        {/* Post content */}
-        <Link to={`/communities/${post.communitySlug}/posts/${post.id}`}>
-          <h2 className="text-xl font-bold text-gray-900 mb-2 hover:text-wallie-accent transition-colors">
-            {post.title}
-          </h2>
-          <p className="text-gray-700 mb-4 line-clamp-2">{post.content}</p>
+    <article className={cn(
+      "bg-wallie-darker rounded-2xl shadow-wallie-md p-6",
+      "border border-transparent hover:border-wallie-accent/20",
+      "hover:shadow-wallie-lg transition-all duration-300"
+    )}>
+      {/* Community header */}
+      <div className="flex items-center gap-2 mb-3">
+        <Link
+          to={`/communities/${post.communitySlug}`}
+          className="flex items-center gap-2 hover:underline"
+        >
+          <span className="text-2xl">{post.communityIcon}</span>
+          <span className="font-medium text-wallie-text-primary">c/{post.communitySlug}</span>
         </Link>
+        <span className="text-wallie-text-tertiary">•</span>
+        <span className="text-sm text-wallie-text-tertiary">
+          Posted by {post.authorName} {dayjs(post.createdAt).fromNow()}
+        </span>
+        {post.isPinned && (
+          <span className="ml-auto px-2 py-1 text-xs font-medium bg-wallie-accent/10 text-wallie-accent rounded">
+            📌 Pinned
+          </span>
+        )}
+      </div>
 
-        {/* Post actions */}
-        <div className="flex items-center gap-4 text-sm">
-          <button
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-lg",
-              "text-gray-600 hover:bg-gray-100 transition-colors"
-            )}
-          >
-            <span>⬆️</span>
-            <span className="font-medium">{post.upvotes}</span>
-            <span>⬇️</span>
-          </button>
-          <Link
-            to={`/communities/${post.communitySlug}/posts/${post.id}#comments`}
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-lg",
-              "text-gray-600 hover:bg-gray-100 transition-colors"
-            )}
-          >
-            <span>💬</span>
-            <span>{post.commentCount} comments</span>
-          </Link>
-          <button
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-lg",
-              "text-gray-600 hover:bg-gray-100 transition-colors"
-            )}
-          >
-            <span>🔗</span>
-            <span>Share</span>
-          </button>
-        </div>
+      {/* Post content */}
+      <Link to={`/communities/${post.communitySlug}/posts/${post.id}`}>
+        <h2 className="text-xl font-bold text-wallie-text-primary mb-2 hover:text-wallie-accent transition-colors">
+          {post.title}
+        </h2>
+        <p className="text-wallie-text-secondary mb-4 line-clamp-2">{post.content}</p>
+      </Link>
+
+      {/* Post actions */}
+      <div className="flex items-center gap-4 text-sm">
+        <button
+          className={cn(
+            "flex items-center gap-2 px-3 py-1.5 rounded-lg",
+            "text-wallie-text-secondary hover:bg-wallie-charcoal/50 hover:text-wallie-text-primary transition-colors"
+          )}
+        >
+          <span>⬆️</span>
+          <span className="font-medium">{post.upvotes}</span>
+          <span>⬇️</span>
+        </button>
+        <Link
+          to={`/communities/${post.communitySlug}/posts/${post.id}#comments`}
+          className={cn(
+            "flex items-center gap-2 px-3 py-1.5 rounded-lg",
+            "text-wallie-text-secondary hover:bg-wallie-charcoal/50 hover:text-wallie-text-primary transition-colors"
+          )}
+        >
+          <span>💬</span>
+          <span>{post.commentCount} comments</span>
+        </Link>
+        <button
+          className={cn(
+            "flex items-center gap-2 px-3 py-1.5 rounded-lg",
+            "text-wallie-text-secondary hover:bg-wallie-charcoal/50 hover:text-wallie-text-primary transition-colors"
+          )}
+        >
+          <span>🔗</span>
+          <span>Share</span>
+        </button>
       </div>
     </article>
   );
@@ -290,18 +294,18 @@ function CommunityCard({ community, rank }: { community: any; rank: number }) {
   return (
     <Link
       to={`/communities/${community.slug}`}
-      className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+      className="flex items-start gap-3 p-3 rounded-lg hover:bg-wallie-charcoal/50 transition-colors"
     >
-      <div className="flex-shrink-0 w-8 text-gray-400 font-medium text-sm">{rank}</div>
+      <div className="flex-shrink-0 w-8 text-wallie-text-tertiary font-medium text-sm">{rank}</div>
       <div className="flex-shrink-0 text-3xl">{community.icon}</div>
       <div className="flex-1 min-w-0">
-        <h3 className="font-medium text-gray-900 truncate">c/{community.slug}</h3>
-        <p className="text-sm text-gray-500 line-clamp-1">{community.description}</p>
-        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+        <h3 className="font-medium text-wallie-text-primary truncate">c/{community.slug}</h3>
+        <p className="text-sm text-wallie-text-secondary line-clamp-1">{community.description}</p>
+        <div className="flex items-center gap-3 mt-1 text-xs text-wallie-text-tertiary">
           <span>{community.memberCount.toLocaleString()} members</span>
           <span>•</span>
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+            <span className="w-2 h-2 bg-wallie-success rounded-full"></span>
             {community.activeMembers} online
           </span>
         </div>
@@ -325,8 +329,8 @@ function FilterButton({
       className={cn(
         "px-4 py-2 rounded-lg font-medium text-sm transition-colors",
         active
-          ? "bg-wallie-accent text-white"
-          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          ? "bg-wallie-accent text-wallie-dark shadow-wallie-glow-accent"
+          : "bg-wallie-charcoal/50 text-wallie-text-secondary hover:bg-wallie-charcoal hover:text-wallie-text-primary"
       )}
     >
       {children}

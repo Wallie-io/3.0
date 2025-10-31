@@ -17,8 +17,12 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 /**
  * Client Loader: Fetch posts from local database
+ * Receives server loader data and merges it
  */
-export async function clientLoader() {
+export async function clientLoader({ serverLoader }: any) {
+  // Get server data (userId)
+  const serverData = await serverLoader();
+
   const posts = await getAllPosts();
 
   // Format timestamps
@@ -30,7 +34,11 @@ export async function clientLoader() {
     authorId: post.author_id,
   }));
 
-  return { posts: formattedPosts };
+  // Merge server and client data
+  return {
+    userId: serverData.userId,
+    posts: formattedPosts
+  };
 }
 
 // Hydrate client loader with server data
@@ -54,8 +62,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function DashboardHome() {
-  const { userId } = useLoaderData<typeof loader>();
-  const { posts } = useLoaderData<typeof clientLoader>();
+  const { userId, posts } = useLoaderData<typeof clientLoader>();
   const fetcher = useFetcher<{ success?: boolean; message?: string; error?: string }>();
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -79,152 +86,280 @@ export default function DashboardHome() {
     }
   };
 
+  // Determine if we have featured content (for demo: feature first 2 posts)
+  const featuredPosts = posts.slice(0, 2);
+  const regularPosts = posts.slice(2);
+
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      {/* Create post form */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Create a post</h2>
+    <div className="max-w-7xl mx-auto">
+      {/* Bento Grid Container */}
+      <div className="grid grid-cols-12 gap-6 auto-rows-auto">
 
-        <fetcher.Form ref={formRef} method="post" action="/api/post" className="space-y-4">
-          <input type="hidden" name="userId" value={userId || ""} />
+        {/* Create Post Card - 2x1 span on desktop, full-width on mobile */}
+        <div className="col-span-12 lg:col-span-8">
+          <div className="bg-wallie-darker/70 backdrop-blur-xl rounded-2xl shadow-wallie-lg border border-white/10 p-6 h-full">
+            <h2 className="text-[20px] font-semibold text-wallie-text-primary mb-4">
+              What's on your mind?
+            </h2>
 
-          {/* Success message */}
-          {fetcher.data?.success && (
-            <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">
-              {fetcher.data.message}
-            </div>
-          )}
+            <fetcher.Form ref={formRef} method="post" action="/api/post" className="space-y-4">
+              <input type="hidden" name="userId" value={userId || ""} />
 
-          {/* Error message */}
-          {fetcher.data?.error && (
-            <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-              {fetcher.data.error}
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <textarea
-              name="content"
-              rows={3}
-              placeholder="What's on your mind?"
-              disabled={isSubmitting}
-              onKeyDown={handleKeyDown}
-              className={cn(
-                "w-full px-4 py-3 rounded-lg border border-gray-300",
-                "focus:outline-none focus:ring-2 focus:ring-wallie-accent focus:border-transparent",
-                "placeholder:text-gray-400 resize-none",
-                "disabled:opacity-50 disabled:cursor-not-allowed"
-              )}
-            />
-            <p className="text-xs text-gray-500">
-              Press{" "}
-              <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">
-                {typeof navigator !== "undefined" && navigator.platform?.includes("Mac") ? "⌘" : "Ctrl"}
-              </kbd>{" "}
-              +{" "}
-              <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded">
-                Enter
-              </kbd>{" "}
-              to post
-            </p>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={cn(
-              "px-6 py-2 rounded-lg font-medium",
-              "bg-wallie-accent text-white",
-              "hover:bg-wallie-accent-dim",
-              "focus:outline-none focus:ring-2 focus:ring-wallie-accent focus:ring-offset-2",
-              "transition-colors duration-200",
-              "disabled:opacity-50 disabled:cursor-not-allowed"
-            )}
-          >
-            {isSubmitting ? "Posting..." : "Post"}
-          </button>
-        </fetcher.Form>
-      </div>
-
-      {/* Feed */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900">Your Feed</h2>
-
-        {posts.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-            <div className="max-w-md mx-auto space-y-4">
-              {/* Icon */}
-              <div className="flex justify-center">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-wallie-accent to-wallie-purple flex items-center justify-center">
-                  <svg
-                    className="w-10 h-10 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
+              {/* Success message */}
+              {fetcher.data?.success && (
+                <div className="p-3 rounded-lg bg-wallie-success/10 border border-wallie-success/20 text-wallie-success text-sm">
+                  {fetcher.data.message}
                 </div>
-              </div>
+              )}
 
-              {/* Message */}
+              {/* Error message */}
+              {fetcher.data?.error && (
+                <div className="p-3 rounded-lg bg-wallie-error/10 border border-wallie-error/20 text-wallie-error text-sm">
+                  {fetcher.data.error}
+                </div>
+              )}
+
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-gray-900">
-                  Your feed is empty
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Start sharing your thoughts with the world! Create your first post above to get started.
+                <textarea
+                  name="content"
+                  rows={3}
+                  placeholder="Share your thoughts..."
+                  disabled={isSubmitting}
+                  onKeyDown={handleKeyDown}
+                  className={cn(
+                    "w-full px-4 py-3 rounded-lg",
+                    "bg-wallie-slate text-wallie-text-primary",
+                    "border border-wallie-charcoal",
+                    "focus:outline-none focus:ring-2 focus:ring-wallie-accent/20 focus:border-wallie-accent",
+                    "placeholder:text-wallie-text-muted resize-none",
+                    "transition-all duration-200",
+                    "disabled:opacity-50 disabled:cursor-not-allowed"
+                  )}
+                />
+                <p className="text-xs text-wallie-text-tertiary">
+                  Press{" "}
+                  <kbd className="px-1.5 py-0.5 text-xs font-semibold text-wallie-text-primary bg-wallie-charcoal border border-wallie-text-muted rounded">
+                    {typeof navigator !== "undefined" && navigator.platform?.includes("Mac") ? "⌘" : "Ctrl"}
+                  </kbd>{" "}
+                  +{" "}
+                  <kbd className="px-1.5 py-0.5 text-xs font-semibold text-wallie-text-primary bg-wallie-charcoal border border-wallie-text-muted rounded">
+                    Enter
+                  </kbd>{" "}
+                  to post
                 </p>
               </div>
 
-              {/* Decorative element */}
-              <div className="flex items-center justify-center gap-2 pt-4">
-                <div className="w-2 h-2 rounded-full bg-wallie-accent animate-pulse" />
-                <div className="w-2 h-2 rounded-full bg-wallie-purple animate-pulse delay-75" />
-                <div className="w-2 h-2 rounded-full bg-wallie-pink animate-pulse delay-150" />
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={cn(
+                  "px-6 py-3 rounded-lg font-semibold",
+                  "bg-wallie-accent text-wallie-dark",
+                  "shadow-wallie-glow-accent",
+                  "hover:bg-wallie-accent/90 hover:shadow-wallie-xl",
+                  "focus:outline-none focus:ring-2 focus:ring-wallie-accent focus:ring-offset-2 focus:ring-offset-wallie-darker",
+                  "transition-all duration-200",
+                  "active:scale-[0.98]",
+                  "disabled:opacity-50 disabled:cursor-not-allowed"
+                )}
+              >
+                {isSubmitting ? "Posting..." : "Post"}
+              </button>
+            </fetcher.Form>
+          </div>
+        </div>
+
+        {/* Trending Widget - 1x2 span on desktop */}
+        <aside className="col-span-12 lg:col-span-4 lg:row-span-2">
+          <div className="bg-wallie-darker/70 backdrop-blur-xl rounded-2xl shadow-wallie-lg border border-white/10 p-6 h-full">
+            <h3 className="text-[18px] font-semibold text-wallie-text-primary mb-4">
+              Trending Topics
+            </h3>
+            <div className="space-y-3">
+              {["#LocalFirst", "#WebAssembly", "#P2P", "#Privacy"].map((tag) => (
+                <div
+                  key={tag}
+                  className="p-3 rounded-lg bg-wallie-slate/50 hover:bg-wallie-charcoal/50 transition-colors cursor-pointer group"
+                >
+                  <p className="font-medium text-wallie-accent group-hover:text-wallie-accent-dim transition-colors">
+                    {tag}
+                  </p>
+                  <p className="text-xs text-wallie-text-tertiary mt-1">
+                    {Math.floor(Math.random() * 100) + 10} posts
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
+
+        {/* Feed Section */}
+        {posts.length === 0 ? (
+          <div className="col-span-12">
+            <div className="bg-wallie-darker/70 backdrop-blur-xl rounded-2xl shadow-wallie-lg border border-white/10 p-12 text-center">
+              <div className="max-w-md mx-auto space-y-4">
+                {/* Icon */}
+                <div className="flex justify-center">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-wallie-accent to-wallie-purple flex items-center justify-center shadow-wallie-glow-accent">
+                    <svg
+                      className="w-10 h-10 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Message */}
+                <div className="space-y-2">
+                  <h3 className="text-[24px] font-bold text-wallie-text-primary">
+                    Your feed is empty
+                  </h3>
+                  <p className="text-wallie-text-secondary leading-relaxed">
+                    Start sharing your thoughts with the world! Create your first post above to get started.
+                  </p>
+                </div>
+
+                {/* Decorative element */}
+                <div className="flex items-center justify-center gap-2 pt-4">
+                  <div className="w-2 h-2 rounded-full bg-wallie-accent animate-pulse" />
+                  <div className="w-2 h-2 rounded-full bg-wallie-purple animate-pulse" style={{ animationDelay: "75ms" }} />
+                  <div className="w-2 h-2 rounded-full bg-wallie-pink animate-pulse" style={{ animationDelay: "150ms" }} />
+                </div>
               </div>
             </div>
           </div>
         ) : (
-          posts.map((post) => (
-            <article
-              key={post.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-wallie-accent flex items-center justify-center text-white font-bold">
-                  {post.author[0]}
-                </div>
+          <>
+            {/* Featured Posts - Larger cards */}
+            {featuredPosts.map((post, index) => (
+              <article
+                key={post.id}
+                className={cn(
+                  "col-span-12 md:col-span-6 lg:col-span-4",
+                  index === 0 && "lg:col-span-5 lg:row-span-2" // First post is larger
+                )}
+              >
+                <div className={cn(
+                  "bg-wallie-darker rounded-2xl shadow-wallie-md p-6 h-full",
+                  "border border-transparent hover:border-wallie-accent/20",
+                  "hover:shadow-wallie-lg transition-all duration-300",
+                  "hover:-translate-y-1"
+                )}>
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-full bg-wallie-accent flex items-center justify-center text-wallie-dark font-bold shadow-wallie-glow-accent">
+                      {post.author[0]}
+                    </div>
 
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="font-semibold text-gray-900">{post.author}</h3>
-                    <span className="text-sm text-gray-500">• {post.timestamp}</span>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-wallie-text-primary">{post.author}</h3>
+                        <span className="text-sm text-wallie-text-tertiary">•</span>
+                        <span className="text-sm text-wallie-text-tertiary">{post.timestamp}</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <p className="text-gray-700">{post.content}</p>
+                  <p className={cn(
+                    "text-wallie-text-secondary leading-relaxed",
+                    index === 0 && "text-lg" // Larger text for featured post
+                  )}>
+                    {post.content}
+                  </p>
 
                   {/* Post actions */}
-                  <div className="flex items-center gap-6 mt-4 text-sm text-gray-500">
-                    <button className="hover:text-wallie-primary transition-colors">
-                      👍 Like
+                  <div className="flex items-center gap-6 mt-6 text-sm text-wallie-text-tertiary">
+                    <button className="flex items-center gap-2 hover:text-wallie-accent transition-colors">
+                      <span>♥</span>
+                      <span>Like</span>
                     </button>
-                    <button className="hover:text-wallie-primary transition-colors">
-                      💬 Comment
+                    <button className="flex items-center gap-2 hover:text-wallie-purple transition-colors">
+                      <span>💬</span>
+                      <span>Comment</span>
                     </button>
-                    <button className="hover:text-wallie-primary transition-colors">
-                      🔄 Share
+                    <button className="flex items-center gap-2 hover:text-wallie-success transition-colors">
+                      <span>⤴</span>
+                      <span>Share</span>
                     </button>
                   </div>
                 </div>
-              </div>
-            </article>
-          ))
+              </article>
+            ))}
+
+            {/* Suggested Users Widget - Only show if we have posts */}
+            {posts.length > 0 && (
+              <aside className="col-span-12 md:col-span-6 lg:col-span-3">
+                <div className="bg-wallie-darker/70 backdrop-blur-xl rounded-2xl shadow-wallie-md border border-white/10 p-6 h-full">
+                  <h3 className="text-[16px] font-semibold text-wallie-text-primary mb-4">
+                    Suggested for You
+                  </h3>
+                  <div className="space-y-3">
+                    {["Alice", "Bob", "Charlie"].map((name) => (
+                      <div key={name} className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-wallie-purple/20 flex items-center justify-center text-wallie-purple font-semibold">
+                          {name[0]}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-wallie-text-primary text-sm">{name}</p>
+                          <p className="text-xs text-wallie-text-tertiary">@{name.toLowerCase()}</p>
+                        </div>
+                        <button className="px-3 py-1 text-xs font-medium bg-wallie-accent/10 text-wallie-accent rounded-lg hover:bg-wallie-accent/20 transition-colors">
+                          Follow
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </aside>
+            )}
+
+            {/* Regular Posts - 1x1 spans */}
+            {regularPosts.map((post) => (
+              <article
+                key={post.id}
+                className="col-span-12 md:col-span-6 lg:col-span-4"
+              >
+                <div className={cn(
+                  "bg-wallie-darker rounded-2xl shadow-wallie-md p-6 h-full",
+                  "border border-transparent hover:border-wallie-accent/20",
+                  "hover:shadow-wallie-lg transition-all duration-300",
+                  "hover:-translate-y-1"
+                )}>
+                  <div className="flex items-start gap-4 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-wallie-accent flex items-center justify-center text-wallie-dark font-bold text-sm">
+                      {post.author[0]}
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium text-wallie-text-primary text-sm">{post.author}</h3>
+                        <span className="text-xs text-wallie-text-tertiary">•</span>
+                        <span className="text-xs text-wallie-text-tertiary">{post.timestamp}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-wallie-text-secondary leading-relaxed">
+                    {post.content}
+                  </p>
+
+                  {/* Post actions */}
+                  <div className="flex items-center gap-6 mt-4 text-xs text-wallie-text-tertiary">
+                    <button className="hover:text-wallie-accent transition-colors">♥ Like</button>
+                    <button className="hover:text-wallie-purple transition-colors">💬 Comment</button>
+                    <button className="hover:text-wallie-success transition-colors">⤴ Share</button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </>
         )}
       </div>
     </div>
