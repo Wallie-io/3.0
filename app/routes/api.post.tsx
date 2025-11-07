@@ -1,54 +1,67 @@
-import { redirect } from "react-router";
-import { createPost, getUserById } from "~/lib/db.client";
+import { data } from "react-router";
+import type { Route } from "./+types/api.post";
+import { createPost } from "~/db/services/posts";
+import { getUserId } from "~/lib/session.server";
 
 /**
- * Client Action: Handle post creation in local database
+ * Server Action: Handle post creation in database
  * This is a resource route - no UI component, just the action
  */
-export async function clientAction({ request }: { request: Request }) {
+export async function action({ request }: Route.ActionArgs) {
+  // Get authenticated user
+  const userId = await getUserId(request);
+  if (!userId) {
+    return data(
+      { error: "User not authenticated", success: false },
+      { status: 401 }
+    );
+  }
+
   const formData = await request.formData();
   const content = formData.get("content");
-  const userId = formData.get("userId");
+  const replyToId = formData.get("replyToId");
 
   // Validate content
   if (typeof content !== "string" || content.trim().length === 0) {
-    return {
-      error: "Post content cannot be empty",
-      success: false,
-    };
+    return data(
+      { error: "Post content cannot be empty", success: false },
+      { status: 400 }
+    );
   }
 
-  // Validate userId
-  if (typeof userId !== "string" || userId.trim().length === 0) {
-    return {
-      error: "User not authenticated. Please refresh the page and try again.",
-      success: false,
-    };
+  // Validate replyToId if provided
+  if (replyToId !== null && typeof replyToId !== "string") {
+    return data(
+      { error: "Invalid reply ID", success: false },
+      { status: 400 }
+    );
   }
 
   try {
-    // Check if user exists in local database
-    const user = await getUserById(userId);
-    if (!user) {
-      return {
-        error: "User not found in local database. Please refresh the page and try again.",
-        success: false,
-      };
-    }
-
-    // Create post in local database (PGlite)
-    await createPost(userId, content.trim());
+    // Create post in database
+    const post = await createPost({
+      authorId: userId,
+      content: content.trim(),
+      replyToId: replyToId && replyToId.trim() !== "" ? replyToId : undefined,
+    });
 
     // Return success - React Router will revalidate loaders automatically
-    return {
-      success: true,
-      message: "Post created successfully!",
-    };
+    return data(
+      {
+        success: true,
+        message: "Post created successfully!",
+        post,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Failed to create post:", error);
-    return {
-      error: `Failed to create post: ${error instanceof Error ? error.message : "Unknown error"}`,
-      success: false,
-    };
+    return data(
+      {
+        error: `Failed to create post: ${error instanceof Error ? error.message : "Unknown error"}`,
+        success: false,
+      },
+      { status: 500 }
+    );
   }
 }

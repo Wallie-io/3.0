@@ -5,7 +5,7 @@
 
 import { verifyPasskeyAuthentication, base64urlToUint8Array } from "~/lib/webauthn.server";
 import { getSession } from "~/lib/session.server";
-import { getCredentialByCredentialId, getUserById, updateCredentialCounter } from "~/lib/db.client";
+import { getCredentialById, getUserById, updateCredentialCounter } from "~/db/services/users";
 import { createUserSession } from "~/lib/session.server";
 import type { AuthenticationResponseJSON } from "@simplewebauthn/browser";
 
@@ -22,8 +22,14 @@ export async function action({ request }: { request: Request }) {
       return Response.json({ error: "Invalid session. Please try again." }, { status: 400 });
     }
 
+    // Clear challenge after retrieval to prevent reuse
+    session.unset("challenge");
+
+    // Get origin from request headers
+    const origin = request.headers.get("origin") || new URL(request.url).origin;
+
     // Get credential from database
-    const credentialRecord = await getCredentialByCredentialId(response.id) as any;
+    const credentialRecord = await getCredentialById(response.id);
 
     if (!credentialRecord) {
       return Response.json({ error: "Credential not found" }, { status: 404 });
@@ -32,11 +38,11 @@ export async function action({ request }: { request: Request }) {
     // Parse stored credential data
     const storedCredential = {
       id: credentialRecord.id,
-      credentialID: credentialRecord.credential_id,
-      publicKey: base64urlToUint8Array(credentialRecord.public_key),
+      credentialID: credentialRecord.credentialId,
+      publicKey: base64urlToUint8Array(credentialRecord.publicKey),
       counter: credentialRecord.counter,
       transports: credentialRecord.transports
-        ? JSON.parse(credentialRecord.transports)
+        ? (credentialRecord.transports.split(",") as any)
         : undefined,
     };
 
@@ -44,7 +50,8 @@ export async function action({ request }: { request: Request }) {
     const verification = await verifyPasskeyAuthentication(
       response,
       challenge,
-      storedCredential
+      storedCredential,
+      origin
     );
 
     if (!verification.verified) {
@@ -53,12 +60,12 @@ export async function action({ request }: { request: Request }) {
 
     // Update credential counter to prevent replay attacks
     await updateCredentialCounter(
-      credentialRecord.credential_id,
+      credentialRecord.credentialId,
       verification.authenticationInfo.newCounter
     );
 
     // Get user information
-    const user = await getUserById(credentialRecord.user_id) as any;
+    const user = await getUserById(credentialRecord.userId);
 
     if (!user) {
       return Response.json({ error: "User not found" }, { status: 404 });
@@ -68,7 +75,7 @@ export async function action({ request }: { request: Request }) {
     return createUserSession({
       request,
       userId: user.id,
-      email: user.email || user.username,
+      email: user.email || user.username || "user",
       redirectTo: "/",
     });
   } catch (error) {

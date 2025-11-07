@@ -1,0 +1,44 @@
+services:
+  electric:
+    image: electricsql/electric:latest
+    container_name: wallie-electric-sync
+    environment:
+      # Supabase Database Connection (from .env)
+      DATABASE_URL: ${DATABASE_URL}
+
+      # Electric Configuration
+      ELECTRIC_WRITE_TO_PG_MODE: "direct_writes"
+      LOGICAL_PUBLISHER_HOST: db.hwcbxfpxlxdxdjzdyhzf.supabase.co
+      LOGICAL_PUBLISHER_PORT: 5432
+
+      # HTTP Port for sync endpoint
+      HTTP_PORT: 5133
+
+      # Optional: Authentication (disable for development)
+      ELECTRIC_INSECURE: "true"
+
+    ports:
+      - "5133:5133"
+
+    # Use Google and Cloudflare DNS for better IPv6 resolution
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 2001:4860:4860::8888
+      - 1.1.1.1
+
+    # Add host entry for Supabase (workaround for DNS issues)
+    extra_hosts:
+      - "db.hwcbxfpxlxdxdjzdyhzf.supabase.co:2600:1f1c:f9:4d14:d5bc:a881:8ada:4f3d"
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5133/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+# Note: Make sure your Supabase database has logical replication enabled
+# and that the Electric service can connect to it

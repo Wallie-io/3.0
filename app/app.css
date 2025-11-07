@@ -5,12 +5,17 @@
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-display: "Momo Trust Display", "Inter", ui-sans-serif, system-ui, sans-serif;
 
-  /* Wallie Color Palette */
+  /* Dark theme colors */
   --color-wallie-void: #0a0a0f;
   --color-wallie-dark: #121218;
   --color-wallie-darker: #1a1a24;
   --color-wallie-slate: #242432;
   --color-wallie-charcoal: #2d2d40;
+
+  /* Light theme colors */
+  --color-wallie-light: #ffffff;
+  --color-wallie-light-gray: #f8f9fa;
+  --color-wallie-light-border: #e9ecef;
 
   /* Primary colors (accessible for text/buttons) */
   --color-wallie-primary: #0e7490;
@@ -28,13 +33,59 @@
   --color-wallie-warning: #ffd60a;
   --color-wallie-error: #ff006e;
 
+  /* Text colors - dark theme */
   --color-wallie-text-primary: #ffffff;
   --color-wallie-text-secondary: #b4b4c8;
   --color-wallie-text-tertiary: #7c7c94;
   --color-wallie-text-muted: #4a4a5e;
+
+  /* Text colors - light theme */
+  --color-wallie-text-primary-light: #1a1a1a;
+  --color-wallie-text-secondary-light: #4a5568;
+  --color-wallie-text-tertiary-light: #718096;
+  --color-wallie-text-muted-light: #a0aec0;
 }
 
+/* Base styles - Light mode */
 html,
 body {
   @apply bg-white text-gray-900;
+}
+
+/* Dark mode */
+html.dark,
+html.dark body {
+  @apply bg-wallie-dark text-wallie-text-primary;
+}
+
+/* Overlay scrollbars that auto-hide */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+*:hover {
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }

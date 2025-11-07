@@ -4,8 +4,10 @@ import { createCookieSessionStorage, redirect } from "react-router";
 export interface SessionData {
   userId: string;
   email?: string;
-  challenge?: string;  // For WebAuthn registration/authentication
-  username?: string;   // Temporary storage during registration
+  challenge?: string;      // For WebAuthn registration/authentication
+  username?: string;       // Temporary storage during registration
+  tempUserId?: string;     // Temporary userId during registration (before verification)
+  referralCode?: string;   // Referral code during signup
 }
 
 export interface SessionFlashData {

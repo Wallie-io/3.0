@@ -8,9 +8,12 @@ import { getSession, commitSession } from "~/lib/session.server";
 
 export async function action({ request }: { request: Request }) {
   try {
+    // Get origin from request headers
+    const origin = request.headers.get("origin") || new URL(request.url).origin;
+
     // Generate authentication options
     // For passkey login, we allow any registered credential
-    const options = await generatePasskeyAuthenticationOptions([]);
+    const options = await generatePasskeyAuthenticationOptions([], origin);
 
     // Store challenge in session for verification
     const session = await getSession(request);

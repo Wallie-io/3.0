@@ -1,12 +1,13 @@
-import { Link, redirect } from "react-router";
+import { Link, redirect, data } from "react-router";
 import type { Route } from "./+types/_auth.signup";
 import { getSession } from "~/lib/session.server";
 import { cn } from "~/lib/utils";
 import { useState, useEffect } from "react";
-import { registerPasskey, isWebAuthnSupported, isPlatformAuthenticatorAvailable } from "~/lib/webauthn.client";
+import { registerPasskey, isPlatformAuthenticatorAvailable } from "~/lib/webauthn.client";
+import { validateInviteCode } from "~/db/services/invites";
 
 /**
- * Loader to check if user is already logged in
+ * Loader to check if user is already logged in and handle referral codes
  */
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request);
@@ -17,7 +18,28 @@ export async function loader({ request }: Route.LoaderArgs) {
     return redirect("/");
   }
 
-  return null;
+  // Check for referral code in query params
+  const url = new URL(request.url);
+  const refCode = url.searchParams.get("ref");
+
+  if (refCode) {
+    // Validate the referral code
+    const validation = await validateInviteCode(refCode);
+
+    if (validation) {
+      return data({
+        hasReferral: true,
+        referralCode: refCode,
+        referrer: validation.referrer,
+      });
+    }
+  }
+
+  return data({
+    hasReferral: false,
+    referralCode: null,
+    referrer: null,
+  });
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -27,17 +49,13 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export default function Signup() {
+export default function Signup({ loaderData }: Route.ComponentProps) {
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isSupported, setIsSupported] = useState(true);
   const [hasPlatformAuth, setHasPlatformAuth] = useState(false);
 
   useEffect(() => {
-    // Check WebAuthn support
-    setIsSupported(isWebAuthnSupported());
-
     // Check platform authenticator availability
     isPlatformAuthenticatorAvailable().then(setHasPlatformAuth);
   }, []);
@@ -49,10 +67,15 @@ export default function Signup() {
 
     try {
       // Step 1: Get registration options from server
+      const formData = new URLSearchParams({ username });
+      if (loaderData.hasReferral && loaderData.referralCode) {
+        formData.append("referralCode", loaderData.referralCode);
+      }
+
       const optionsResponse = await fetch("/api/auth/register-options", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ username }),
+        body: formData,
       });
 
       if (!optionsResponse.ok) {
@@ -91,44 +114,55 @@ export default function Signup() {
     }
   };
 
-  if (!isSupported) {
-    return (
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Create Account</h2>
-        <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700">
-          <p className="font-medium mb-2">Passkeys Not Supported</p>
-          <p className="text-sm">
-            Your browser doesn't support passkeys. Please use a modern browser like Chrome, Safari, or Edge.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">Create Account</h2>
-      <p className="text-gray-600 mb-6">Sign up with a passkey - no password needed!</p>
+      <h2 className="text-[24px] font-bold text-wallie-text-primary mb-2">Create Account</h2>
+      <p className="text-wallie-text-secondary mb-6">Sign up with a passkey - no password needed!</p>
+
+      {/* Referrer Info */}
+      {loaderData.hasReferral && loaderData.referrer && (
+        <div className="mb-6 p-4 rounded-lg bg-wallie-accent/10 border border-wallie-accent/20">
+          <div className="flex items-center gap-3">
+            {loaderData.referrer.avatarUrl ? (
+              <img
+                src={loaderData.referrer.avatarUrl}
+                alt={loaderData.referrer.displayName || loaderData.referrer.username || "User"}
+                className="w-12 h-12 rounded-full border-2 border-wallie-accent"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-wallie-accent/20 border-2 border-wallie-accent flex items-center justify-center text-lg font-bold text-wallie-accent">
+                {(loaderData.referrer.displayName || loaderData.referrer.username || "?")[0].toUpperCase()}
+              </div>
+            )}
+            <div className="text-left">
+              <p className="text-xs text-wallie-text-secondary">Invited by</p>
+              <p className="text-sm font-bold text-wallie-accent">
+                {loaderData.referrer.displayName || loaderData.referrer.username || "A Wallie user"}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSignup} className="space-y-4">
         {/* Error message */}
         {error && (
-          <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+          <div className="p-3 rounded-lg bg-wallie-error/10 border border-wallie-error/20 text-wallie-error text-sm">
             {error}
           </div>
         )}
 
         {/* Platform authenticator info */}
         {hasPlatformAuth && (
-          <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-sm">
+          <div className="p-3 rounded-lg bg-wallie-accent/10 border border-wallie-accent/20 text-wallie-accent text-sm">
             <span className="font-medium">🔐 Passkey Ready!</span> Your device supports Face ID, Touch ID, or Windows Hello.
           </div>
         )}
 
         {/* Username field (optional) */}
         <div>
-          <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-            Username <span className="text-gray-500 font-normal">(optional)</span>
+          <label htmlFor="username" className="block text-sm font-medium text-wallie-text-secondary mb-2">
+            Username <span className="text-wallie-text-tertiary font-normal">(optional)</span>
           </label>
           <input
             type="text"
@@ -136,13 +170,16 @@ export default function Signup() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className={cn(
-              "w-full px-4 py-2 rounded-lg border border-gray-300",
-              "focus:outline-none focus:ring-2 focus:ring-wallie-accent focus:border-transparent",
-              "placeholder:text-gray-400"
+              "w-full px-4 py-3 rounded-lg",
+              "bg-wallie-slate text-wallie-text-primary",
+              "border border-wallie-charcoal",
+              "focus:outline-none focus:ring-2 focus:ring-wallie-accent/20 focus:border-wallie-accent",
+              "placeholder:text-wallie-text-muted",
+              "transition-all duration-200"
             )}
             placeholder="Leave blank for auto-generated ID"
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-2 text-xs text-wallie-text-tertiary">
             A unique ID will be generated if you don't provide a username
           </p>
         </div>
@@ -152,11 +189,13 @@ export default function Signup() {
           type="submit"
           disabled={isLoading}
           className={cn(
-            "w-full py-3 px-4 rounded-lg font-medium",
-            "bg-wallie-accent text-white",
-            "hover:bg-wallie-accent-dim",
-            "focus:outline-none focus:ring-2 focus:ring-wallie-accent focus:ring-offset-2",
-            "transition-colors duration-200",
+            "w-full py-3 px-4 rounded-lg font-semibold",
+            "bg-wallie-accent text-wallie-dark",
+            "shadow-wallie-glow-accent",
+            "hover:bg-wallie-accent/90 hover:shadow-wallie-xl",
+            "focus:outline-none focus:ring-2 focus:ring-wallie-accent focus:ring-offset-2 focus:ring-offset-wallie-darker",
+            "transition-all duration-200",
+            "active:scale-[0.98]",
             "disabled:opacity-50 disabled:cursor-not-allowed"
           )}
         >
@@ -165,17 +204,17 @@ export default function Signup() {
       </form>
 
       {/* Passkey info */}
-      <div className="mt-6 p-4 rounded-lg bg-gray-50 border border-gray-200">
-        <p className="text-sm text-gray-700 font-medium mb-2">What's a passkey?</p>
-        <p className="text-xs text-gray-600 leading-relaxed">
+      <div className="mt-6 p-4 rounded-lg bg-wallie-slate/50 border border-wallie-charcoal/50">
+        <p className="text-sm text-wallie-text-primary font-medium mb-2">What's a passkey?</p>
+        <p className="text-xs text-wallie-text-secondary leading-relaxed">
           Passkeys are a more secure and convenient way to sign in. They use your device's biometric authentication (Face ID, Touch ID, or Windows Hello) instead of passwords.
         </p>
       </div>
 
       {/* Sign in link */}
-      <div className="mt-6 text-center text-sm text-gray-600">
+      <div className="mt-6 text-center text-sm text-wallie-text-secondary">
         Already have an account?{" "}
-        <Link to="/login" className="font-medium text-wallie-accent hover:text-wallie-accent-dim">
+        <Link to="/login" className="font-medium text-wallie-accent hover:text-wallie-accent-dim transition-colors">
           Sign in
         </Link>
       </div>

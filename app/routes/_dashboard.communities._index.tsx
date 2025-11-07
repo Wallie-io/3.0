@@ -3,6 +3,7 @@ import type { Route } from "./+types/_dashboard.communities._index";
 import { cn } from "~/lib/utils";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { UnderDevelopment } from "~/components/UnderDevelopment";
 
 dayjs.extend(relativeTime);
 
@@ -153,6 +154,7 @@ export default function CommunitiesIndex({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="max-w-7xl mx-auto">
+      <UnderDevelopment pageName="Communities" />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Feed */}
         <div className="lg:col-span-2 space-y-4">
@@ -244,12 +246,12 @@ function PostCard({ post }: { post: any }) {
       </div>
 
       {/* Post content */}
-      <Link to={`/communities/${post.communitySlug}/posts/${post.id}`}>
-        <h2 className="text-xl font-bold text-wallie-text-primary mb-2 hover:text-wallie-accent transition-colors">
+      <div>
+        <h2 className="text-xl font-bold text-wallie-text-primary mb-2">
           {post.title}
         </h2>
         <p className="text-wallie-text-secondary mb-4 line-clamp-2">{post.content}</p>
-      </Link>
+      </div>
 
       {/* Post actions */}
       <div className="flex items-center gap-4 text-sm">
@@ -263,8 +265,7 @@ function PostCard({ post }: { post: any }) {
           <span className="font-medium">{post.upvotes}</span>
           <span>⬇️</span>
         </button>
-        <Link
-          to={`/communities/${post.communitySlug}/posts/${post.id}#comments`}
+        <button
           className={cn(
             "flex items-center gap-2 px-3 py-1.5 rounded-lg",
             "text-wallie-text-secondary hover:bg-wallie-charcoal/50 hover:text-wallie-text-primary transition-colors"
@@ -272,7 +273,7 @@ function PostCard({ post }: { post: any }) {
         >
           <span>💬</span>
           <span>{post.commentCount} comments</span>
-        </Link>
+        </button>
         <button
           className={cn(
             "flex items-center gap-2 px-3 py-1.5 rounded-lg",

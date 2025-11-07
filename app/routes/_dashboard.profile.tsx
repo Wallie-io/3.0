@@ -1,47 +1,23 @@
 import { Form, useLoaderData, useActionData } from "react-router";
 import type { Route } from "./+types/_dashboard.profile";
 import { getUserId, getSession } from "~/lib/session.server";
-import { getProfileByUserId, updateProfile, getPostsByUserId } from "~/lib/db.client";
 import { cn } from "~/lib/utils";
 import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import { UnderDevelopment } from "~/components/UnderDevelopment";
+
+dayjs.extend(relativeTime);
 
 /**
- * Server Loader: Get user ID and email from session
+ * Server Loader: Get user profile data
  */
 export async function loader({ request }: Route.LoaderArgs) {
   const userId = await getUserId(request);
   const session = await getSession(request);
   const email = session.get("email");
 
-  return { userId, email };
-}
-
-/**
- * Client Loader: Fetch profile from local database
- */
-export async function clientLoader({ serverLoader }: Route.ClientLoaderArgs) {
-  const data = await serverLoader();
-  const { userId, email } = data as { userId: string | null; email: string | null };
-
-  if (!userId) {
-    return {
-      profile: {
-        display_name: "User",
-        bio: "",
-        location: "",
-        website: "",
-        created_at: new Date().toISOString(),
-      },
-      email: null,
-      postCount: 0
-    };
-  }
-
-  // Fetch profile from local database
-  const profile = await getProfileByUserId(userId);
-  const posts = await getPostsByUserId(userId);
-
-  const profileData = profile as any || {
+  // Mock profile data for under development page
+  const profile = {
     display_name: email?.split("@")[0] || "User",
     bio: "",
     location: "",
@@ -50,46 +26,22 @@ export async function clientLoader({ serverLoader }: Route.ClientLoaderArgs) {
   };
 
   return {
-    profile: profileData,
+    userId,
     email,
-    postCount: posts.length,
+    profile,
+    postCount: 0,
   };
 }
 
-clientLoader.hydrate = true;
-
 /**
- * Client Action: Handle profile updates
+ * Server Action: Handle profile updates (disabled for now)
  */
-export async function clientAction({ request }: Route.ClientActionArgs) {
+export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent");
-  const userId = formData.get("userId");
 
   if (intent === "update-profile") {
-    const displayName = formData.get("displayName");
-    const bio = formData.get("bio");
-    const location = formData.get("location");
-    const website = formData.get("website");
-
-    // Validation
-    if (typeof displayName !== "string" || displayName.trim().length === 0) {
-      return { error: "Display name is required" };
-    }
-
-    if (typeof userId !== "string") {
-      return { error: "User not authenticated" };
-    }
-
-    // Update profile in local database
-    await updateProfile(userId, {
-      displayName,
-      bio: typeof bio === "string" ? bio : undefined,
-      location: typeof location === "string" ? location : undefined,
-      website: typeof website === "string" ? website : undefined,
-    });
-
-    return { success: true, message: "Profile updated successfully!" };
+    return { error: "Profile editing is not available yet" } as const;
   }
 
   return null;
@@ -103,151 +55,275 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Profile() {
-  const { userId } = useLoaderData<typeof loader>();
-  const { profile, email, postCount } = useLoaderData<typeof clientLoader>();
-  const actionData = useActionData<typeof clientAction>();
+  const { userId, profile, email, postCount } = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      {/* Profile header */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center gap-6">
-          <div className="w-24 h-24 rounded-full bg-wallie-accent flex items-center justify-center text-white text-3xl font-bold">
-            {profile.display_name?.[0]?.toUpperCase() || "U"}
-          </div>
+    <div className="max-w-7xl mx-auto">
+      <UnderDevelopment pageName="Profile" />
+      {/* Bento Grid Container */}
+      <div className="grid grid-cols-12 gap-6 auto-rows-auto">
 
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900">{profile.display_name || "User"}</h1>
-            <p className="text-gray-600">{email}</p>
-            <p className="text-sm text-gray-500 mt-1">
-              Joined {dayjs(profile.created_at).format("MMMM YYYY")}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-3 gap-4 pt-6 border-t border-gray-200">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-gray-900">{postCount}</p>
-            <p className="text-sm text-gray-600">Posts</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-gray-900">0</p>
-            <p className="text-sm text-gray-600">Followers</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-gray-900">0</p>
-            <p className="text-sm text-gray-600">Following</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Edit profile form */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">Edit Profile</h2>
-
-        <Form method="post" className="space-y-4" reloadDocument>
-          <input type="hidden" name="intent" value="update-profile" />
-          <input type="hidden" name="userId" value={userId || ""} />
-
-          {/* Success message */}
-          {actionData?.success && (
-            <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">
-              {actionData.message}
+        {/* Profile Card - 1x2 span on desktop */}
+        <div className="col-span-12 lg:col-span-4 lg:row-span-2">
+          <div className="bg-wallie-darker rounded-2xl shadow-wallie-lg border border-white/10 p-6 h-full">
+            {/* Avatar */}
+            <div className="flex justify-center mb-6">
+              <div className="w-32 h-32 rounded-full bg-wallie-accent flex items-center justify-center text-wallie-dark text-5xl font-bold shadow-wallie-glow-accent">
+                {profile.display_name?.[0]?.toUpperCase() || "U"}
+              </div>
             </div>
-          )}
 
-          {/* Error message */}
-          {actionData?.error && (
-            <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-              {actionData.error}
+            {/* Profile info */}
+            <div className="text-center space-y-2 mb-6">
+              <h1 className="text-[24px] font-bold text-wallie-text-primary">
+                {profile.display_name || "User"}
+              </h1>
+              <p className="text-sm text-wallie-text-secondary">{email}</p>
+              <p className="text-xs text-wallie-text-tertiary">
+                Joined {dayjs(profile.created_at).format("MMMM YYYY")}
+              </p>
             </div>
-          )}
 
-          {/* Display name */}
-          <div>
-            <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-1">
-              Display Name
-            </label>
-            <input
-              type="text"
-              id="displayName"
-              name="displayName"
-              defaultValue={profile.display_name || ""}
-              required
-              className={cn(
-                "w-full px-4 py-2 rounded-lg border border-gray-300",
-                "focus:outline-none focus:ring-2 focus:ring-wallie-accent focus:border-transparent"
-              )}
-            />
-          </div>
-
-          {/* Bio */}
-          <div>
-            <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
-              Bio
-            </label>
-            <textarea
-              id="bio"
-              name="bio"
-              rows={3}
-              defaultValue={profile.bio || ""}
-              className={cn(
-                "w-full px-4 py-2 rounded-lg border border-gray-300",
-                "focus:outline-none focus:ring-2 focus:ring-wallie-accent focus:border-transparent",
-                "resize-none"
-              )}
-            />
-          </div>
-
-          {/* Location */}
-          <div>
-            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-              Location
-            </label>
-            <input
-              type="text"
-              id="location"
-              name="location"
-              defaultValue={profile.location || ""}
-              className={cn(
-                "w-full px-4 py-2 rounded-lg border border-gray-300",
-                "focus:outline-none focus:ring-2 focus:ring-wallie-accent focus:border-transparent"
-              )}
-            />
-          </div>
-
-          {/* Website */}
-          <div>
-            <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-1">
-              Website
-            </label>
-            <input
-              type="url"
-              id="website"
-              name="website"
-              defaultValue={profile.website || ""}
-              className={cn(
-                "w-full px-4 py-2 rounded-lg border border-gray-300",
-                "focus:outline-none focus:ring-2 focus:ring-wallie-accent focus:border-transparent"
-              )}
-              placeholder="https://"
-            />
-          </div>
-
-          {/* Submit button */}
-          <button
-            type="submit"
-            className={cn(
-              "px-6 py-2 rounded-lg font-medium",
-              "bg-wallie-primary text-white",
-              "hover:bg-wallie-primary-hover",
-              "focus:outline-none focus:ring-2 focus:ring-wallie-accent focus:ring-offset-2",
-              "transition-colors duration-200"
+            {/* Bio */}
+            {profile.bio && (
+              <div className="mb-6 p-4 rounded-lg bg-wallie-slate/50">
+                <p className="text-sm text-wallie-text-secondary leading-relaxed">
+                  {profile.bio}
+                </p>
+              </div>
             )}
-          >
-            Save Changes
-          </button>
-        </Form>
+
+            {/* Additional info */}
+            <div className="space-y-2">
+              {profile.location && (
+                <div className="flex items-center gap-2 text-sm text-wallie-text-secondary">
+                  <span>📍</span>
+                  <span>{profile.location}</span>
+                </div>
+              )}
+              {profile.website && (
+                <div className="flex items-center gap-2 text-sm">
+                  <span>🔗</span>
+                  <a
+                    href={profile.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-wallie-accent hover:text-wallie-accent-dim transition-colors truncate"
+                  >
+                    {profile.website}
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Cards - 3 individual cards spanning 2 columns each */}
+        <div className="col-span-12 md:col-span-4 lg:col-span-3">
+          <div className="bg-wallie-darker/70 backdrop-blur-xl rounded-2xl shadow-wallie-md border border-white/10 p-6 text-center h-full">
+            <p className="text-[32px] font-bold text-wallie-accent">{postCount}</p>
+            <p className="text-sm text-wallie-text-tertiary font-medium">Posts</p>
+          </div>
+        </div>
+
+        <div className="col-span-12 md:col-span-4 lg:col-span-3">
+          <div className="bg-wallie-darker/70 backdrop-blur-xl rounded-2xl shadow-wallie-md border border-white/10 p-6 text-center h-full">
+            <p className="text-[32px] font-bold text-wallie-purple">0</p>
+            <p className="text-sm text-wallie-text-tertiary font-medium">Followers</p>
+          </div>
+        </div>
+
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-wallie-darker/70 backdrop-blur-xl rounded-2xl shadow-wallie-md border border-white/10 p-6 text-center h-full">
+            <p className="text-[32px] font-bold text-wallie-success">0</p>
+            <p className="text-sm text-wallie-text-tertiary font-medium">Following</p>
+          </div>
+        </div>
+
+        {/* Activity Widget */}
+        <div className="col-span-12 lg:col-span-5">
+          <div className="bg-wallie-darker/70 backdrop-blur-xl rounded-2xl shadow-wallie-md border border-white/10 p-6 h-full">
+            <h3 className="text-[18px] font-semibold text-wallie-text-primary mb-4">
+              Recent Activity
+            </h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-wallie-slate/50">
+                <div className="w-8 h-8 rounded-full bg-wallie-accent/20 flex items-center justify-center">
+                  <span className="text-sm">📝</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-wallie-text-secondary">Created {postCount} posts</p>
+                  <p className="text-xs text-wallie-text-tertiary">Today</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-wallie-slate/50">
+                <div className="w-8 h-8 rounded-full bg-wallie-purple/20 flex items-center justify-center">
+                  <span className="text-sm">✓</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-wallie-text-secondary">Profile completed</p>
+                  <p className="text-xs text-wallie-text-tertiary">{dayjs(profile.created_at).fromNow()}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Achievements Widget */}
+        <div className="col-span-12 lg:col-span-3">
+          <div className="bg-wallie-darker/70 backdrop-blur-xl rounded-2xl shadow-wallie-md border border-white/10 p-6 h-full">
+            <h3 className="text-[18px] font-semibold text-wallie-text-primary mb-4">
+              Achievements
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-lg bg-wallie-slate/50 text-center">
+                <div className="text-2xl mb-1">🎉</div>
+                <p className="text-xs text-wallie-text-tertiary">Early Adopter</p>
+              </div>
+              <div className="p-3 rounded-lg bg-wallie-slate/50 text-center opacity-50">
+                <div className="text-2xl mb-1">🔥</div>
+                <p className="text-xs text-wallie-text-tertiary">Locked</p>
+              </div>
+              <div className="p-3 rounded-lg bg-wallie-slate/50 text-center opacity-50">
+                <div className="text-2xl mb-1">⭐</div>
+                <p className="text-xs text-wallie-text-tertiary">Locked</p>
+              </div>
+              <div className="p-3 rounded-lg bg-wallie-slate/50 text-center opacity-50">
+                <div className="text-2xl mb-1">💎</div>
+                <p className="text-xs text-wallie-text-tertiary">Locked</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Edit Profile Form - Full width */}
+        <div className="col-span-12">
+          <div className="bg-wallie-darker rounded-2xl shadow-wallie-lg border border-white/10 p-6">
+            <h2 className="text-[20px] font-semibold text-wallie-text-primary mb-6">Edit Profile</h2>
+
+            <Form method="post" className="space-y-4">
+              <input type="hidden" name="intent" value="update-profile" />
+              <input type="hidden" name="userId" value={userId || ""} />
+
+              {/* Error message */}
+              {actionData?.error && (
+                <div className="p-3 rounded-lg bg-wallie-error/10 border border-wallie-error/20 text-wallie-error text-sm">
+                  {actionData.error}
+                </div>
+              )}
+
+              {/* Form grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Display name */}
+                <div>
+                  <label htmlFor="displayName" className="block text-sm font-medium text-wallie-text-secondary mb-2">
+                    Display Name
+                  </label>
+                  <input
+                    type="text"
+                    id="displayName"
+                    name="displayName"
+                    defaultValue={profile.display_name || ""}
+                    required
+                    className={cn(
+                      "w-full px-4 py-3 rounded-lg",
+                      "bg-wallie-slate text-wallie-text-primary",
+                      "border border-wallie-charcoal",
+                      "focus:outline-none focus:ring-2 focus:ring-wallie-accent/20 focus:border-wallie-accent",
+                      "transition-all duration-200"
+                    )}
+                  />
+                </div>
+
+                {/* Location */}
+                <div>
+                  <label htmlFor="location" className="block text-sm font-medium text-wallie-text-secondary mb-2">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    id="location"
+                    name="location"
+                    defaultValue={profile.location || ""}
+                    className={cn(
+                      "w-full px-4 py-3 rounded-lg",
+                      "bg-wallie-slate text-wallie-text-primary",
+                      "border border-wallie-charcoal",
+                      "focus:outline-none focus:ring-2 focus:ring-wallie-accent/20 focus:border-wallie-accent",
+                      "placeholder:text-wallie-text-muted",
+                      "transition-all duration-200"
+                    )}
+                    placeholder="City, Country"
+                  />
+                </div>
+
+                {/* Bio - Full width */}
+                <div className="md:col-span-2">
+                  <label htmlFor="bio" className="block text-sm font-medium text-wallie-text-secondary mb-2">
+                    Bio
+                  </label>
+                  <textarea
+                    id="bio"
+                    name="bio"
+                    rows={3}
+                    defaultValue={profile.bio || ""}
+                    className={cn(
+                      "w-full px-4 py-3 rounded-lg",
+                      "bg-wallie-slate text-wallie-text-primary",
+                      "border border-wallie-charcoal",
+                      "focus:outline-none focus:ring-2 focus:ring-wallie-accent/20 focus:border-wallie-accent",
+                      "placeholder:text-wallie-text-muted resize-none",
+                      "transition-all duration-200"
+                    )}
+                    placeholder="Tell us about yourself..."
+                  />
+                </div>
+
+                {/* Website */}
+                <div className="md:col-span-2">
+                  <label htmlFor="website" className="block text-sm font-medium text-wallie-text-secondary mb-2">
+                    Website
+                  </label>
+                  <input
+                    type="url"
+                    id="website"
+                    name="website"
+                    defaultValue={profile.website || ""}
+                    className={cn(
+                      "w-full px-4 py-3 rounded-lg",
+                      "bg-wallie-slate text-wallie-text-primary",
+                      "border border-wallie-charcoal",
+                      "focus:outline-none focus:ring-2 focus:ring-wallie-accent/20 focus:border-wallie-accent",
+                      "placeholder:text-wallie-text-muted",
+                      "transition-all duration-200"
+                    )}
+                    placeholder="https://"
+                  />
+                </div>
+              </div>
+
+              {/* Submit button */}
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className={cn(
+                    "px-6 py-3 rounded-lg font-semibold",
+                    "bg-wallie-accent text-wallie-dark",
+                    "shadow-wallie-glow-accent",
+                    "hover:bg-wallie-accent/90 hover:shadow-wallie-xl",
+                    "focus:outline-none focus:ring-2 focus:ring-wallie-accent focus:ring-offset-2 focus:ring-offset-wallie-darker",
+                    "transition-all duration-200",
+                    "active:scale-[0.98]"
+                  )}
+                >
+                  Save Changes
+                </button>
+              </div>
+            </Form>
+          </div>
+        </div>
+
       </div>
     </div>
   );

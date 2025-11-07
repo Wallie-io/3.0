@@ -5,10 +5,13 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "react-router";
 
 import type { Route } from "./+types/root";
-import { useDatabase } from "./lib/use-database";
+import { useTheme } from "./lib/use-theme";
+import { getUserId } from "./lib/session.server";
+import { getUserById } from "./db/services/users";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -25,9 +28,36 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+/**
+ * Server Loader: Get user theme preference
+ */
+export async function loader({ request }: Route.LoaderArgs) {
+  const userId = await getUserId(request);
+
+  if (!userId) {
+    return { theme: "system" };
+  }
+
+  try {
+    const user = await getUserById(userId);
+    return { theme: user?.theme || "system" };
+  } catch (error) {
+    console.error("Failed to load theme preference:", error);
+    return { theme: "system" };
+  }
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
+  // Get theme from loader data if available
+  const data = useLoaderData<typeof loader>();
+  const theme = data?.theme || "system";
+
+  // Server-render with dark class if theme is explicitly "dark"
+  // For "system" theme, let client-side handle it (brief flash acceptable)
+  const isDark = theme === "dark";
+
   return (
-    <html lang="en">
+    <html lang="en" className={isDark ? "dark" : undefined}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -44,32 +74,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const { isReady, error } = useDatabase();
+  const loaderData = useLoaderData<typeof loader>();
+  const initialTheme = loaderData?.theme || "system";
 
-  // Show loading state while database initializes
-  if (!isReady && !error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-wallie-primary border-r-transparent mb-4"></div>
-          <p className="text-gray-600">Initializing database...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error state if database failed to initialize
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-md p-6">
-          <h1 className="text-2xl font-bold text-red-600 mb-2">Database Error</h1>
-          <p className="text-gray-700 mb-4">Failed to initialize the local database.</p>
-          <p className="text-sm text-gray-500">{error.message}</p>
-        </div>
-      </div>
-    );
-  }
+  // Initialize theme
+  useTheme(initialTheme as any);
 
   return <Outlet />;
 }

@@ -23,8 +23,38 @@ import type {
 
 // WebAuthn configuration
 const RP_NAME = "Wallie";
-const RP_ID = process.env.RP_ID || "localhost";
-const ORIGIN = process.env.ORIGIN || "http://localhost:5173";
+
+/**
+ * Get RP_ID based on the request origin
+ * WebAuthn requires the RP_ID to match the domain
+ */
+function getRPIDFromOrigin(origin: string): string {
+  try {
+    const url = new URL(origin);
+    return url.hostname;
+  } catch {
+    return process.env.RP_ID || "localhost";
+  }
+}
+
+/**
+ * Get list of allowed origins for WebAuthn
+ */
+function getAllowedOrigins(): string[] {
+  const origins = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://192.168.7.35:5173",
+    "http://192.168.7.35:5174",
+  ];
+
+  // Add custom origin from env if provided
+  if (process.env.ORIGIN) {
+    origins.push(process.env.ORIGIN);
+  }
+
+  return origins;
+}
 
 export interface StoredCredential {
   id: string;
@@ -40,11 +70,14 @@ export interface StoredCredential {
 export async function generatePasskeyRegistrationOptions(
   userId: string,
   username: string,
-  existingCredentials: StoredCredential[] = []
+  existingCredentials: StoredCredential[] = [],
+  origin?: string
 ) {
+  const rpID = origin ? getRPIDFromOrigin(origin) : (process.env.RP_ID || "localhost");
+
   const opts: GenerateRegistrationOptionsOpts = {
     rpName: RP_NAME,
-    rpID: RP_ID,
+    rpID,
     userID: new TextEncoder().encode(userId),
     userName: username,
     userDisplayName: username,
@@ -70,13 +103,17 @@ export async function generatePasskeyRegistrationOptions(
  */
 export async function verifyPasskeyRegistration(
   response: RegistrationResponseJSON,
-  expectedChallenge: string
+  expectedChallenge: string,
+  origin?: string
 ): Promise<VerifiedRegistrationResponse> {
+  const expectedOrigin = origin || process.env.ORIGIN || "http://localhost:5173";
+  const expectedRPID = getRPIDFromOrigin(expectedOrigin);
+
   const opts: VerifyRegistrationResponseOpts = {
     response,
     expectedChallenge,
-    expectedOrigin: ORIGIN,
-    expectedRPID: RP_ID,
+    expectedOrigin: getAllowedOrigins(),
+    expectedRPID,
   };
 
   return verifyRegistrationResponse(opts);
@@ -86,10 +123,13 @@ export async function verifyPasskeyRegistration(
  * Generate authentication options for passkey login
  */
 export async function generatePasskeyAuthenticationOptions(
-  userCredentials: StoredCredential[] = []
+  userCredentials: StoredCredential[] = [],
+  origin?: string
 ) {
+  const rpID = origin ? getRPIDFromOrigin(origin) : (process.env.RP_ID || "localhost");
+
   const opts: GenerateAuthenticationOptionsOpts = {
-    rpID: RP_ID,
+    rpID,
     userVerification: "discouraged", // More compatible with various devices
   };
 
@@ -111,13 +151,17 @@ export async function generatePasskeyAuthenticationOptions(
 export async function verifyPasskeyAuthentication(
   response: AuthenticationResponseJSON,
   expectedChallenge: string,
-  credential: StoredCredential
+  credential: StoredCredential,
+  origin?: string
 ): Promise<VerifiedAuthenticationResponse> {
+  const expectedOrigin = origin || process.env.ORIGIN || "http://localhost:5173";
+  const expectedRPID = getRPIDFromOrigin(expectedOrigin);
+
   const opts: VerifyAuthenticationResponseOpts = {
     response,
     expectedChallenge,
-    expectedOrigin: ORIGIN,
-    expectedRPID: RP_ID,
+    expectedOrigin: getAllowedOrigins(),
+    expectedRPID,
     credential: {
       id: credential.id,
       // @ts-expect-error - Type mismatch between SimpleWebAuthn Uint8Array types

@@ -3,6 +3,7 @@ import type { Route } from "./+types/_dashboard.communities.$communitySlug";
 import { cn } from "~/lib/utils";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { UnderDevelopment } from "~/components/UnderDevelopment";
 
 dayjs.extend(relativeTime);
 
@@ -174,6 +175,7 @@ export default function CommunityPage({ loaderData, params }: Route.ComponentPro
 
   return (
     <div className="max-w-7xl mx-auto -mt-6">
+      <UnderDevelopment pageName="Communities" />
       {/* Community Banner */}
       <div
         className="h-32 rounded-t-lg"
@@ -340,12 +342,12 @@ function PostCard({ post, communitySlug }: { post: any; communitySlug: string })
         </div>
 
         {/* Post content */}
-        <Link to={`/communities/${communitySlug}/posts/${post.id}`}>
-          <h2 className="text-xl font-bold text-gray-900 mb-2 hover:text-wallie-accent transition-colors">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
             {post.title}
           </h2>
           <p className="text-gray-700 mb-4">{post.content}</p>
-        </Link>
+        </div>
 
         {/* Post actions */}
         <div className="flex items-center gap-4 text-sm">
@@ -359,8 +361,7 @@ function PostCard({ post, communitySlug }: { post: any; communitySlug: string })
             <span className="font-medium">{post.upvotes}</span>
             <span>⬇️</span>
           </button>
-          <Link
-            to={`/communities/${communitySlug}/posts/${post.id}#comments`}
+          <button
             className={cn(
               "flex items-center gap-2 px-3 py-1.5 rounded-lg",
               "text-gray-600 hover:bg-gray-100 transition-colors"
@@ -368,7 +369,7 @@ function PostCard({ post, communitySlug }: { post: any; communitySlug: string })
           >
             <span>💬</span>
             <span>{post.commentCount} comments</span>
-          </Link>
+          </button>
           <button
             className={cn(
               "flex items-center gap-2 px-3 py-1.5 rounded-lg",

@@ -1,7 +1,7 @@
-import { Link, useLoaderData } from "react-router";
+import { Link, useLoaderData, Outlet } from "react-router";
 import type { Route } from "./+types/_dashboard.messages._index";
-import { getUserId } from "~/lib/session.server";
-import { getThreadsForUser } from "~/lib/db.client";
+import { requireUserId } from "~/lib/session.server";
+import { getThreadsForUser } from "~/db/services/messages";
 import { cn } from "~/lib/utils";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -10,50 +10,28 @@ import relativeTime from "dayjs/plugin/relativeTime";
 dayjs.extend(relativeTime);
 
 /**
- * Server Loader: Get user ID from session
+ * Server Loader: Fetch message threads from database
  */
 export async function loader({ request }: Route.LoaderArgs) {
-  const userId = await getUserId(request);
-  return { userId };
-}
+  const userId = await requireUserId(request);
 
-/**
- * Client Loader: Fetch message threads from local database
- */
-export async function clientLoader({ serverLoader }: Route.ClientLoaderArgs) {
-  const data = await serverLoader();
-  const { userId } = data as { userId: string | null };
-
-  if (!userId) {
-    return { threads: [] };
-  }
-
-  // Fetch threads from local database
-  const threads = await getThreadsForUser(userId);
+  // Get threads from database
+  const result = await getThreadsForUser(userId, { limit: 15 });
 
   // Format threads for display
-  const formattedThreads = threads.map((thread: any) => ({
+  const threads = result.data.map((thread) => ({
     id: thread.id,
     recipientName: thread.recipient_name || "Unknown",
     recipientAvatar: thread.recipient_name?.[0]?.toUpperCase() || "?",
     recipientId: thread.recipient_id,
     lastMessage: thread.last_message || "No messages yet",
     lastMessageTime: thread.last_message_time
-      ? formatTimestamp(thread.last_message_time)
+      ? dayjs(thread.last_message_time).fromNow()
       : "",
     unread: false, // TODO: Implement unread tracking
   }));
 
-  return { threads: formattedThreads };
-}
-
-clientLoader.hydrate = true;
-
-/**
- * Format timestamp to human-readable string using day.js
- */
-function formatTimestamp(timestamp: string): string {
-  return dayjs(timestamp).fromNow();
+  return { threads };
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -64,23 +42,36 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function MessagesList() {
-  const { threads } = useLoaderData<typeof clientLoader>();
+  const { threads } = useLoaderData<typeof loader>();
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+    <div className="max-w-5xl mx-auto">
+      <div className="bg-wallie-darker rounded-2xl shadow-wallie-lg border border-white/10">
         {/* Header */}
-        <div className="p-6 border-b border-gray-200">
-          <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
-          <p className="text-sm text-gray-600 mt-1">🔒 All messages are end-to-end encrypted</p>
+        <div className="p-6 border-b border-wallie-charcoal/50 flex items-center justify-between">
+          <div>
+            <h1 className="text-[24px] font-bold text-wallie-text-primary">Messages</h1>
+            <p className="text-sm text-wallie-text-secondary mt-1">Your conversations</p>
+          </div>
+          <Link
+            to="/messages/new"
+            className={cn(
+              "px-4 py-2 rounded-lg font-medium",
+              "bg-wallie-accent text-wallie-dark",
+              "hover:bg-wallie-accent-dim",
+              "transition-colors duration-200"
+            )}
+          >
+            + New Chat
+          </Link>
         </div>
 
         {/* Threads list */}
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-wallie-charcoal/50">
           {threads.length === 0 ? (
             <div className="p-12 text-center">
-              <p className="text-gray-500">No conversations yet</p>
-              <p className="text-sm text-gray-400 mt-2">Start a new conversation to get started</p>
+              <p className="text-wallie-text-secondary">No conversations yet</p>
+              <p className="text-sm text-wallie-text-tertiary mt-2">Start a new conversation to get started</p>
             </div>
           ) : (
             threads.map((thread) => (
@@ -88,11 +79,11 @@ export default function MessagesList() {
                 key={thread.id}
                 to={`/messages/${thread.id}`}
                 className={cn(
-                  "flex items-center gap-4 p-6 hover:bg-gray-50 transition-colors",
-                  thread.unread && "bg-blue-50/50"
+                  "flex items-center gap-4 p-6 hover:bg-wallie-charcoal/30 transition-all duration-200",
+                  thread.unread && "bg-wallie-accent/10 border-l-4 border-wallie-accent"
                 )}
               >
-                <div className="w-12 h-12 rounded-full bg-wallie-accent flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-wallie-accent flex items-center justify-center text-wallie-dark font-bold text-lg flex-shrink-0 shadow-wallie-glow-accent">
                   {thread.recipientAvatar}
                 </div>
 
@@ -101,12 +92,12 @@ export default function MessagesList() {
                     <h3
                       className={cn(
                         "font-semibold",
-                        thread.unread ? "text-gray-900" : "text-gray-700"
+                        thread.unread ? "text-wallie-text-primary" : "text-wallie-text-secondary"
                       )}
                     >
                       {thread.recipientName}
                     </h3>
-                    <span className="text-xs text-gray-500 flex-shrink-0">
+                    <span className="text-xs text-wallie-text-tertiary flex-shrink-0">
                       {thread.lastMessageTime}
                     </span>
                   </div>
@@ -114,7 +105,7 @@ export default function MessagesList() {
                   <p
                     className={cn(
                       "text-sm truncate",
-                      thread.unread ? "text-gray-700 font-medium" : "text-gray-500"
+                      thread.unread ? "text-wallie-text-secondary font-medium" : "text-wallie-text-tertiary"
                     )}
                   >
                     {thread.lastMessage}
@@ -129,6 +120,9 @@ export default function MessagesList() {
           )}
         </div>
       </div>
+
+      {/* Outlet for modal routes like /messages/new */}
+      <Outlet />
     </div>
   );
 }

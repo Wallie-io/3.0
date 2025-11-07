@@ -3,6 +3,7 @@ import type { Route } from "./+types/_dashboard.hangouts._index";
 import { cn } from "~/lib/utils";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { UnderDevelopment } from "~/components/UnderDevelopment";
 
 dayjs.extend(relativeTime);
 
@@ -106,6 +107,7 @@ export default function HangoutsIndex({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="max-w-7xl mx-auto">
+      <UnderDevelopment pageName="Hangouts" />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
@@ -118,8 +120,7 @@ export default function HangoutsIndex({ loaderData }: Route.ComponentProps) {
                   Join voice and video conversations with the community
                 </p>
               </div>
-              <Link
-                to="/hangouts/create"
+              <button
                 className={cn(
                   "px-6 py-3 rounded-lg font-semibold",
                   "bg-wallie-accent text-wallie-dark",
@@ -129,7 +130,7 @@ export default function HangoutsIndex({ loaderData }: Route.ComponentProps) {
                 )}
               >
                 + Start Hangout
-              </Link>
+              </button>
             </div>
           </div>
 
@@ -231,12 +232,9 @@ function HangoutCard({ hangout, isLive }: { hangout: any; isLive: boolean }) {
         <div className="flex-1">
           <div className="flex items-start justify-between gap-4 mb-2">
             <div>
-              <Link
-                to={`/hangouts/${hangout.id}`}
-                className="text-xl font-bold text-wallie-text-primary hover:text-wallie-accent transition-colors"
-              >
+              <h3 className="text-xl font-bold text-wallie-text-primary">
                 {hangout.name}
-              </Link>
+              </h3>
               <p className="text-sm text-wallie-text-secondary mt-1">{hangout.description}</p>
             </div>
             {isLive && (
@@ -283,8 +281,7 @@ function HangoutCard({ hangout, isLive }: { hangout: any; isLive: boolean }) {
             </div>
           </div>
 
-          <Link
-            to={`/hangouts/${hangout.id}`}
+          <button
             className={cn(
               "mt-4 inline-flex items-center gap-2 px-6 py-2 rounded-lg font-medium",
               "bg-wallie-accent text-wallie-dark",
@@ -292,7 +289,7 @@ function HangoutCard({ hangout, isLive }: { hangout: any; isLive: boolean }) {
             )}
           >
             🎙️ Join Hangout
-          </Link>
+          </button>
         </div>
       </div>
     </article>
