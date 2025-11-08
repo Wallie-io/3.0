@@ -180,16 +180,6 @@ export default function InviteLanding({ loaderData }: Route.ComponentProps) {
             </Link>
           </p>
         </div>
-
-        {/* Local-First Badge */}
-        <div className="text-center mt-12">
-          <div className="inline-flex items-center gap-2 px-6 py-3 bg-wallie-darker/50 rounded-full border border-white/10">
-            <Users className="w-4 h-4 text-wallie-accent" />
-            <span className="text-sm text-wallie-text-secondary">
-              Local-first • Your data stays in your browser
-            </span>
-          </div>
-        </div>
       </div>
     </div>
   );
