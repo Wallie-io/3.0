@@ -199,7 +199,7 @@ export default function NewPost({ loaderData }: Route.ComponentProps) {
 
           {/* Helper Text */}
           <div className="mb-3 text-sm text-gray-500">
-            <span>Tip: Select text to format it with the inline toolbar</span>
+            <span>Tip: Use the toolbar above to format your text</span>
           </div>
 
           {/* Actions */}

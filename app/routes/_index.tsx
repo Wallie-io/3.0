@@ -4,6 +4,7 @@ import { data } from "react-router";
 import { useEffect, useState } from "react";
 import { cn } from "~/lib/utils";
 import { getUserId } from "~/lib/session.server";
+import { getTotalUserCount } from "~/db/services/users";
 
 /**
  * Landing Page Loader
@@ -17,10 +18,12 @@ export async function loader({ request }: Route.LoaderArgs) {
     return redirect("/home");
   }
 
-  // TODO: Replace with actual database queries when available
+  // Fetch actual user count from database
+  const totalSignups = await getTotalUserCount();
+
   const stats = {
-    totalSignups: 0,
-    onlineUsers: 0,
+    totalSignups,
+    onlineUsers: 0, // TODO: Implement real-time online user tracking
   };
 
   return data(stats);
@@ -28,10 +31,10 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export function meta() {
   return [
-    { title: "Wallie - Your Local-First Social Network" },
+    { title: "Wallie - The Transparent Social Network" },
     {
       name: "description",
-      content: "Join Wallie, the revolutionary local-first social network. Own your data, connect with others, and experience the future of social media."
+      content: "Join Wallie, the transparent social network. Open source, custom algorithms, and creator-first revenue. Social media built for the community."
     },
   ];
 }
@@ -50,7 +53,7 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-wallie-dark/80 backdrop-blur-lg border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="text-2xl font-bold bg-gradient-to-r from-wallie-accent to-wallie-purple bg-clip-text text-transparent">
+            <div className="text-2xl font-bold bg-gradient-to-r from-wallie-accent to-wallie-purple bg-clip-text text-transparent font-display">
               Wallie
             </div>
           </div>
@@ -78,7 +81,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-6 pt-20">
+      <section className="relative min-h-screen flex items-center justify-center px-6 py-20">
         {/* Animated background gradients */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className={cn(
@@ -93,7 +96,7 @@ export default function LandingPage() {
 
         <div className="relative z-10 max-w-5xl mx-auto text-center">
           {/* Status badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-wallie-charcoal/50 backdrop-blur-sm border border-wallie-accent/20 mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-wallie-charcoal/50 backdrop-blur-sm border border-wallie-accent/20 mb-12 md:mb-16">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-wallie-accent opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-wallie-accent"></span>
@@ -120,8 +123,8 @@ export default function LandingPage() {
 
           {/* Subheadline */}
           <p className="text-xl md:text-2xl text-wallie-text-secondary mb-12 max-w-3xl mx-auto leading-relaxed">
-            Welcome to <span className="text-wallie-accent font-semibold">Wallie</span>, the revolutionary local-first social network.
-            Own your data, connect authentically, and experience social media reimagined.
+            Welcome to <span className="text-wallie-accent font-semibold">Wallie</span>, the transparent social network.
+            Open source, custom algorithms, and creator-first revenue. Built for the community.
           </p>
 
           {/* CTA Buttons */}
@@ -183,7 +186,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="relative py-32 px-6 bg-wallie-charcoal/30">
+      <section id="features" className="relative pt-16 pb-32 px-6 bg-wallie-charcoal/30">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
@@ -197,12 +200,12 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Feature 1 */}
             <div className="bg-wallie-darker rounded-2xl p-8 border border-white/10 hover:border-wallie-accent/30 transition-all duration-300 hover:shadow-wallie-lg">
-              <div className="text-4xl mb-4">🔒</div>
+              <div className="text-4xl mb-4">🔓</div>
               <h3 className="text-2xl font-bold mb-3 text-wallie-text-primary">
-                Local-First
+                Open Source
               </h3>
               <p className="text-wallie-text-secondary leading-relaxed">
-                Your data lives on your device. Access your content instantly, work offline, and sync when you're ready.
+                Fully transparent code. No hidden algorithms. See exactly how Wallie works and contribute to its development.
               </p>
             </div>
 

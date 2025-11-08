@@ -39,8 +39,6 @@ export function RichTextEditor({
   onSubmit,
 }: RichTextEditorProps) {
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
-  const [showToolbar, setShowToolbar] = useState(false);
-  const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
   const editableRef = useRef<HTMLDivElement>(null);
 
   // Handle autofocus
@@ -54,52 +52,18 @@ export function RichTextEditor({
     }
   }, [autoFocus, editor]);
 
-  // Handle selection change to show/hide toolbar
-  const handleSelectionChange = useCallback(() => {
-    const { selection } = editor;
-
-    // Hide toolbar if no selection or selection is collapsed
-    if (!selection || Range.isCollapsed(selection)) {
-      setShowToolbar(false);
-      return;
-    }
-
-    // Get the DOM range and calculate position
-    const domSelection = window.getSelection();
-    if (domSelection && domSelection.rangeCount > 0) {
-      const domRange = domSelection.getRangeAt(0);
-      const rect = domRange.getBoundingClientRect();
-
-      setToolbarPosition({
-        top: rect.top - 50 + window.scrollY,
-        left: rect.left + rect.width / 2 + window.scrollX,
-      });
-      setShowToolbar(true);
-    }
-  }, [editor]);
-
   return (
     <div className={cn('relative', className)}>
       <Slate editor={editor} initialValue={value} onChange={onChange}>
-        {showToolbar && (
-          <InlineToolbar
-            style={{
-              position: 'absolute',
-              top: `${toolbarPosition.top}px`,
-              left: `${toolbarPosition.left}px`,
-              transform: 'translateX(-50%)',
-              zIndex: 50,
-            }}
-          />
-        )}
+        {/* Fixed Toolbar */}
+        <FixedToolbar />
 
         <Editable
           ref={editableRef as any}
           placeholder={placeholder}
           autoFocus={autoFocus}
-          onSelect={handleSelectionChange}
           className={cn(
-            'min-h-[300px] w-full rounded-lg border border-gray-700 bg-gray-800',
+            'min-h-[120px] w-full rounded-b-lg border border-t-0 border-gray-700 bg-gray-800',
             'px-4 py-3 text-gray-100 outline-none',
             'placeholder:text-gray-500',
             'focus:border-wallie-accent focus:ring-2 focus:ring-wallie-accent/20'
@@ -142,20 +106,15 @@ export function RichTextEditor({
 }
 
 // ============================================================================
-// Inline Toolbar Component
+// Fixed Toolbar Component
 // ============================================================================
 
-interface InlineToolbarProps {
-  style: React.CSSProperties;
-}
-
-function InlineToolbar({ style }: InlineToolbarProps) {
+function FixedToolbar() {
   const editor = useSlate() as ReactEditor;
 
   return (
     <div
-      style={style}
-      className="flex items-center gap-1 rounded-lg border border-gray-700 bg-gray-900 p-1 shadow-lg"
+      className="flex items-center gap-1 rounded-t-lg border border-gray-700 bg-gray-900 p-2"
       onMouseDown={(e) => {
         // Prevent toolbar clicks from losing editor selection
         e.preventDefault();

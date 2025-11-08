@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Local-first social network** built with React Router v7, Tailwind v4, PGlite (Postgres WASM in browser), Day.js, and cookie-based sessions.
+**Social network** built with React Router v7, Tailwind v4, Day.js, and cookie-based sessions.
 
 **Key Principles:**
 - **Tailwind-only** - No custom CSS files
@@ -71,7 +71,7 @@ export async function action({ request }: Route.ActionArgs) {
 **Client Loaders** (browser-only):
 ```typescript
 export async function clientLoader() {
-  const posts = await db.posts.findMany(); // PGlite
+  const posts = await db.posts.findMany();
   return { posts };
 }
 clientLoader.hydrate = true;
@@ -350,6 +350,7 @@ const colClasses = {
 3. **Client Actions** - Use `useFetcher()`, NEVER `<Form>`
 4. **Redirects** - Use `redirect()` from react-router, NEVER `Response.redirect()`
 5. **JSON Responses** - Use `data()` from react-router, NEVER `Response.json()`
+6. **Git Commits** - NEVER add Claude Code watermarks or co-author tags to commit messages
 
 **Form Handling Decision:**
 - Route has `clientAction`? → `useFetcher()`

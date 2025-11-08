@@ -407,3 +407,14 @@ export async function deleteCredential(credentialId: string): Promise<boolean> {
 
   return result.count > 0;
 }
+
+/**
+ * Get total count of users
+ */
+export async function getTotalUserCount(): Promise<number> {
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(users);
+
+  return Number(result[0]?.count || 0);
+}

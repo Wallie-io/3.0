@@ -58,7 +58,7 @@ export default function DashboardLayout() {
       {/* Mobile Top Bar (< md only) */}
       <div className="md:hidden h-16 bg-wallie-darker/70 backdrop-blur-xl border-b border-wallie-charcoal/50 flex items-center justify-between px-4 shrink-0">
         <Link to="/home">
-          <h1 className="text-[20px] font-bold text-wallie-accent tracking-tight font-display cursor-pointer hover:text-wallie-accent-dim transition-colors">Wallie</h1>
+          <h1 className="text-[20px] font-bold bg-gradient-to-r from-wallie-accent to-wallie-purple bg-clip-text text-transparent tracking-tight font-display cursor-pointer transition-colors">Wallie</h1>
         </Link>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -105,7 +105,7 @@ export default function DashboardLayout() {
         {/* Logo - Desktop only */}
         <div className="hidden lg:flex h-16 items-center px-6 border-b border-wallie-charcoal/50">
           <Link to="/home">
-            <h1 className="text-[24px] font-bold text-wallie-accent tracking-tight font-display cursor-pointer hover:text-wallie-accent-dim transition-colors">Wallie</h1>
+            <h1 className="text-[24px] font-bold bg-gradient-to-r from-wallie-accent to-wallie-purple bg-clip-text text-transparent tracking-tight font-display cursor-pointer transition-colors">Wallie</h1>
           </Link>
         </div>
 

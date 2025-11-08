@@ -7,7 +7,7 @@ import { Outlet } from "react-router";
  */
 export default function AuthLayout() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-wallie-dark">
+    <div className="relative min-h-screen flex items-center justify-center bg-wallie-dark">
       {/* Background gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-wallie-accent/5 via-wallie-purple/5 to-wallie-pink/5" />
 
@@ -15,7 +15,7 @@ export default function AuthLayout() {
         {/* Wallie Logo/Brand */}
         <div className="text-center mb-8">
           <h1 className="text-[48px] font-bold text-wallie-accent tracking-tight mb-2 font-display">Wallie</h1>
-          <p className="text-wallie-text-secondary">Your local-first social network</p>
+          <p className="text-wallie-text-secondary">The Transparent Social Network</p>
         </div>
 
         {/* Auth form content (login/signup) */}
@@ -26,7 +26,6 @@ export default function AuthLayout() {
         {/* Footer */}
         <div className="text-center mt-6 text-sm text-wallie-text-tertiary">
           <p>
-            Local-first •{" "}
             <a
               href="https://github.com/your-repo/wallie"
               target="_blank"
@@ -35,7 +34,7 @@ export default function AuthLayout() {
             >
               Open source
             </a>
-            {" "}• Your data, your control
+            {" "}• Transparent • Built for the community
           </p>
         </div>
       </div>
