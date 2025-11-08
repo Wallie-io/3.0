@@ -38,7 +38,7 @@ export default function InviteLanding({ loaderData }: Route.ComponentProps) {
 
   if (!valid) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-wallie-dark">
+      <div className="relative min-h-screen flex items-center justify-center bg-wallie-dark">
         <div className="absolute inset-0 bg-gradient-to-br from-wallie-accent/5 via-wallie-purple/5 to-wallie-pink/5" />
 
         <div className="w-full max-w-2xl p-8 relative z-10 text-center">
@@ -67,7 +67,7 @@ export default function InviteLanding({ loaderData }: Route.ComponentProps) {
   }
 
   return (
-    <div className="min-h-screen bg-wallie-dark">
+    <div className="relative min-h-screen bg-wallie-dark">
       <div className="absolute inset-0 bg-gradient-to-br from-wallie-accent/5 via-wallie-purple/5 to-wallie-pink/5" />
 
       <div className="relative z-10 max-w-4xl mx-auto px-6 py-16">
