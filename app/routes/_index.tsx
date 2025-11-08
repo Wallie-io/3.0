@@ -4,7 +4,7 @@ import { data } from "react-router";
 import { useEffect, useState } from "react";
 import { cn } from "~/lib/utils";
 import { getUserId } from "~/lib/session.server";
-import { getTotalUserCount } from "~/db/services/users";
+import { getTotalUserCount, getOnlineUserCount } from "~/db/services/users";
 
 /**
  * Landing Page Loader
@@ -18,12 +18,13 @@ export async function loader({ request }: Route.LoaderArgs) {
     return redirect("/home");
   }
 
-  // Fetch actual user count from database
+  // Fetch actual stats from database
   const totalSignups = await getTotalUserCount();
+  const onlineUsers = await getOnlineUserCount();
 
   const stats = {
     totalSignups,
-    onlineUsers: 0, // TODO: Implement real-time online user tracking
+    onlineUsers,
   };
 
   return data(stats);
@@ -40,12 +41,66 @@ export function meta() {
 }
 
 export default function LandingPage() {
-  const { totalSignups, onlineUsers } = useLoaderData<typeof loader>();
+  const loaderData = useLoaderData<typeof loader>();
   const [mounted, setMounted] = useState(false);
+  const [stats, setStats] = useState({
+    totalSignups: loaderData.totalSignups,
+    onlineUsers: loaderData.onlineUsers,
+  });
+  const [pollDelay, setPollDelay] = useState(1500);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Poll for updated stats with exponential backoff
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/stats');
+        if (response.ok) {
+          const data = await response.json();
+
+          // Check if values changed
+          const hasChanged =
+            data.totalSignups !== stats.totalSignups ||
+            data.onlineUsers !== stats.onlineUsers;
+
+          if (hasChanged) {
+            setStats({
+              totalSignups: data.totalSignups,
+              onlineUsers: data.onlineUsers,
+            });
+            // Reset delay to initial value on change
+            setPollDelay(1500);
+          } else {
+            // Exponential backoff: double the delay, max out at ~30 seconds
+            setPollDelay(prev => Math.min(prev * 2, 30000));
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+        // On error, use exponential backoff as well
+        setPollDelay(prev => Math.min(prev * 2, 30000));
+      }
+
+      // Schedule next poll
+      timeoutId = setTimeout(fetchStats, pollDelay);
+    };
+
+    // Start polling after initial delay
+    timeoutId = setTimeout(fetchStats, pollDelay);
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [pollDelay, stats]);
+
+  const { totalSignups, onlineUsers } = stats;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-wallie-dark via-wallie-charcoal to-wallie-dark text-wallie-text-primary">
@@ -96,7 +151,7 @@ export default function LandingPage() {
 
         <div className="relative z-10 max-w-5xl mx-auto text-center">
           {/* Status badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-wallie-charcoal/50 backdrop-blur-sm border border-wallie-accent/20 mb-12 md:mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-wallie-charcoal/50 backdrop-blur-sm border border-wallie-accent/20 mb-8 mt-4 md:mt-8 lg:mt-12">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-wallie-accent opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-wallie-accent"></span>
@@ -168,14 +223,8 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="bg-wallie-charcoal/50 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-wallie-success opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-wallie-success"></span>
-                </span>
-                <div className="text-4xl font-bold text-wallie-success">
-                  {onlineUsers}
-                </div>
+              <div className="text-4xl font-bold text-wallie-success mb-2 animate-pulse">
+                {onlineUsers.toLocaleString()}
               </div>
               <div className="text-sm text-wallie-text-secondary">
                 Users Online Now

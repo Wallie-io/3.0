@@ -126,7 +126,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       return data({ message: notification.message }, { status: 200 });
     }
 
-    return data({ messages: [] }, { status: 204 });
+    return new Response(null, { status: 204 });
   } catch (error) {
     await sql.end();
     throw error;

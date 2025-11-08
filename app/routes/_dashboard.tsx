@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { Route } from "./+types/_dashboard";
 import { requireUserId, getSession } from "~/lib/session.server";
 import { cn } from "~/lib/utils";
+import { updateUserPresence } from "~/db/services/users";
 
 /**
  * Loader: Validate user session and require authentication
@@ -12,6 +13,9 @@ export async function loader({ request }: Route.LoaderArgs) {
   const userId = await requireUserId(request);
   const session = await getSession(request);
   const email = session.get("email");
+
+  // Update user presence to online
+  await updateUserPresence(userId, 'online');
 
   return { userId, email };
 }

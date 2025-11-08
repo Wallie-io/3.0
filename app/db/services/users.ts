@@ -4,7 +4,7 @@
  */
 
 import { db } from '../connection';
-import { users, profiles, credentials } from '../schema';
+import { users, profiles, credentials, userPresence } from '../schema';
 import type { User, NewUser, Profile, NewProfile, Credential, NewCredential } from '../schema';
 import { eq, and, desc, sql, or, like, inArray } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
@@ -417,4 +417,41 @@ export async function getTotalUserCount(): Promise<number> {
     .from(users);
 
   return Number(result[0]?.count || 0);
+}
+
+/**
+ * Get count of online users
+ */
+export async function getOnlineUserCount(): Promise<number> {
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(userPresence)
+    .where(eq(userPresence.status, 'online'));
+
+  return Number(result[0]?.count || 0);
+}
+
+/**
+ * Update user presence status
+ */
+export async function updateUserPresence(
+  userId: string,
+  status: 'online' | 'offline' | 'away'
+): Promise<void> {
+  await db
+    .insert(userPresence)
+    .values({
+      userId,
+      status,
+      lastSeen: new Date(),
+      updatedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: userPresence.userId,
+      set: {
+        status,
+        lastSeen: new Date(),
+        updatedAt: new Date(),
+      },
+    });
 }

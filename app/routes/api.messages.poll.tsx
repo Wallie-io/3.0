@@ -76,7 +76,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     // Timeout reached, no new messages
     console.log(`[POLL] Timeout reached for user ${userId}, no new messages`);
-    return data({ messages: [] }, { status: 204 });
+    return new Response(null, { status: 204 });
 
   } catch (error) {
     console.error("[POLL] Long polling error:", error);

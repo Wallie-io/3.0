@@ -1,22 +1,24 @@
 import { data } from "react-router";
 import type { Route } from "./+types/api.stats";
+import { getTotalUserCount, getOnlineUserCount } from "~/db/services/users";
 
 /**
  * Stats API Endpoint
  * Returns current platform statistics
  */
 export async function loader({ request }: Route.LoaderArgs) {
-  // TODO: Replace with actual database queries
-  // For now, return starting values
+  const totalSignups = await getTotalUserCount();
+  const onlineUsers = await getOnlineUserCount();
+
   const stats = {
-    totalSignups: 0,
-    onlineUsers: 0,
+    totalSignups,
+    onlineUsers,
     lastUpdated: new Date().toISOString(),
   };
 
   return data(stats, {
     headers: {
-      "Cache-Control": "public, max-age=60", // Cache for 1 minute
+      "Cache-Control": "no-cache", // Don't cache, we want fresh data
     },
   });
 }
