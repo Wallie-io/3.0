@@ -36,6 +36,7 @@ export default [
   route("api/post", "routes/api.post.tsx"),
   route("api/posts/:postId/like", "routes/api.posts.$postId.like.tsx"),
   route("api/posts/:postId/likes", "routes/api.posts.$postId.likes.tsx"),
+  route("api/posts/:postId/delete", "routes/api.posts.$postId.delete.tsx"),
   route("api/logout", "routes/api.logout.tsx"),
   route("api/users/search", "routes/api.users.search.tsx"),
   route("api/images/upload", "routes/api.images.upload.tsx"),

@@ -147,6 +147,10 @@ export default function LandingPage() {
             "absolute bottom-1/4 -right-1/4 w-96 h-96 bg-wallie-purple/20 rounded-full blur-3xl",
             mounted && "animate-pulse"
           )} style={{ animationDelay: "1s" }} />
+          <div className={cn(
+            "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-wallie-pink/15 rounded-full blur-3xl",
+            mounted && "animate-pulse"
+          )} style={{ animationDelay: "2s" }} />
         </div>
 
         <div className="relative z-10 max-w-5xl mx-auto text-center">
@@ -171,7 +175,7 @@ export default function LandingPage() {
               Your Network.
             </span>
             <br />
-            <span className="bg-gradient-to-r from-wallie-purple via-wallie-accent to-white bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-wallie-pink to-wallie-purple bg-clip-text text-transparent">
               Your Control.
             </span>
           </h1>
@@ -188,9 +192,9 @@ export default function LandingPage() {
               to="/signup"
               className={cn(
                 "px-8 py-4 rounded-xl font-bold text-lg",
-                "bg-wallie-accent text-wallie-dark",
-                "shadow-wallie-glow-accent",
-                "hover:bg-wallie-accent/90 hover:shadow-wallie-xl hover:scale-105",
+                "bg-wallie-pink text-white",
+                "shadow-lg shadow-wallie-pink/30",
+                "hover:shadow-xl hover:shadow-wallie-pink/40 hover:scale-105",
                 "transition-all duration-200"
               )}
             >
@@ -329,9 +333,9 @@ export default function LandingPage() {
             to="/signup"
             className={cn(
               "inline-flex px-10 py-5 rounded-xl font-bold text-xl",
-              "bg-gradient-to-r from-wallie-accent to-wallie-purple text-white",
-              "shadow-wallie-glow-accent",
-              "hover:shadow-wallie-xl hover:scale-105",
+              "bg-wallie-pink text-white",
+              "shadow-lg shadow-wallie-pink/30",
+              "hover:shadow-xl hover:shadow-wallie-pink/40 hover:scale-105",
               "transition-all duration-200"
             )}
           >

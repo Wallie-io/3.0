@@ -299,7 +299,7 @@ export default function DashboardHome() {
                   desktopRowClasses
                 )}
               >
-                <PostCard post={item.post} featured={item.featured} />
+                <PostCard post={item.post} featured={item.featured} currentUserId={userId} />
               </div>
             );
           })}

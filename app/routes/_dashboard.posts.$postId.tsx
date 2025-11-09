@@ -4,7 +4,7 @@
  */
 
 import { data } from 'react-router';
-import { Link, useNavigate, useLoaderData } from 'react-router';
+import { Link, useNavigate, useLoaderData, useFetcher } from 'react-router';
 import type { Route } from './+types/_dashboard.posts.$postId';
 import { getPostWithStats, getRepliesForPost } from '~/db/services/posts';
 import { getUserId } from '~/lib/session.server';
@@ -44,6 +44,30 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 export default function PostDetail() {
   const { post, replies, userId } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
+  const deleteFetcher = useFetcher();
+
+  // Check if current user owns this post
+  const isOwner = userId && post.author_id === userId;
+
+  // Handle delete
+  const handleDelete = () => {
+    if (!confirm('Are you sure you want to delete this post?')) {
+      return;
+    }
+
+    deleteFetcher.submit(
+      {},
+      {
+        method: 'post',
+        action: `/api/posts/${post.id}/delete`,
+      }
+    );
+
+    // Navigate back after successful delete
+    if (deleteFetcher.state === 'idle' && deleteFetcher.data?.success) {
+      navigate('/home');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -111,6 +135,26 @@ export default function PostDetail() {
               </svg>
               <span>Reply</span>
             </Link>
+
+            {/* Delete Button (only for post owner) */}
+            {isOwner && (
+              <button
+                onClick={handleDelete}
+                disabled={deleteFetcher.state !== 'idle'}
+                className="ml-auto flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-400 transition-colors hover:bg-red-900/20 hover:text-red-400 disabled:opacity-50"
+                title="Delete post"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+                <span>Delete</span>
+              </button>
+            )}
           </div>
         </div>
 

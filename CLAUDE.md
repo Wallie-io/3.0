@@ -203,17 +203,40 @@ dayjs(date).format("MMM D, YYYY")  // "Jan 15, 2025" (full dates)
 
 **Tailwind v4** with custom theme in `app/app.css`. Use `cn()` utility from `~/lib/utils` for conditional classes.
 
-**Custom Colors:**
-- `bg-wallie-accent` - Primary cyan (#00e5ff)
-- `bg-wallie-accent-dim` - Hover state
-- `bg-wallie-purple` - Secondary
-- `bg-wallie-pink` - Destructive
+**Color System & Visual Hierarchy:**
+
+**Primary Brand Colors:**
+- `wallie-accent` (Cyan #00e5ff) - Primary brand color, headings, important text
+- `wallie-purple` - Secondary brand accent
+- `wallie-pink` (#ff006e) - **Action color for CTAs only**
+
+**Color Usage Guidelines:**
+
+1. **Call-to-Action Buttons (CTAs):**
+   - Use solid `bg-wallie-pink` for primary action buttons
+   - Add pink shadow glow: `shadow-lg shadow-wallie-pink/30`
+   - Hover: `hover:shadow-xl hover:shadow-wallie-pink/40`
+   - **Pink = Action** (signup, join, get started buttons)
+
+2. **Text Gradients:**
+   - Use 2-color gradients: `from-wallie-accent to-wallie-purple`
+   - Avoid 3-color gradients (too busy)
+   - Exception: Strategic single pink accent (e.g., headline emphasis)
+
+3. **Feature Cards:**
+   - Hover borders cycle through: cyan, purple, green
+   - Avoid pink on feature cards (reserved for CTAs)
+
+4. **Background Accents:**
+   - Subtle pink orb: `bg-wallie-pink/15` (center, animated)
+   - Cyan and purple orbs for depth
 
 **Rules:**
 - **ONLY Tailwind** - No custom CSS files
 - Use `cn()` for conditional/merging classes
 - Use `dark:` prefix for dark mode
 - Prefer `rounded-lg`, `rounded-xl`
+- **Pink is reserved for CTAs** - maintains clear visual hierarchy
 
 ---
 

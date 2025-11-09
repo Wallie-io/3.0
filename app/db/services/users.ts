@@ -6,7 +6,7 @@
 import { db } from '../connection';
 import { users, profiles, credentials, userPresence } from '../schema';
 import type { User, NewUser, Profile, NewProfile, Credential, NewCredential } from '../schema';
-import { eq, and, desc, sql, or, like, inArray } from 'drizzle-orm';
+import { eq, and, desc, sql, or, like, inArray, gte } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 // ============================================================================
@@ -420,13 +420,20 @@ export async function getTotalUserCount(): Promise<number> {
 }
 
 /**
- * Get count of online users
+ * Get count of online users (active in last 10 minutes)
  */
 export async function getOnlineUserCount(): Promise<number> {
+  const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+
   const result = await db
     .select({ count: sql<number>`count(*)` })
     .from(userPresence)
-    .where(eq(userPresence.status, 'online'));
+    .where(
+      and(
+        eq(userPresence.status, 'online'),
+        gte(userPresence.lastSeen, tenMinutesAgo)
+      )
+    );
 
   return Number(result[0]?.count || 0);
 }
