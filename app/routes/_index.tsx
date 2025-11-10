@@ -136,102 +136,67 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-6 py-20">
-        {/* Animated background gradients */}
+      <section className="relative min-h-screen flex items-center px-6 py-20">
+        {/* Simplified background gradient */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className={cn(
-            "absolute top-1/4 -left-1/4 w-96 h-96 bg-wallie-accent/20 rounded-full blur-3xl",
-            mounted && "animate-pulse"
-          )} />
-          <div className={cn(
-            "absolute bottom-1/4 -right-1/4 w-96 h-96 bg-wallie-purple/20 rounded-full blur-3xl",
-            mounted && "animate-pulse"
-          )} style={{ animationDelay: "1s" }} />
-          <div className={cn(
-            "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-wallie-pink/15 rounded-full blur-3xl",
-            mounted && "animate-pulse"
-          )} style={{ animationDelay: "2s" }} />
+          <div className="absolute inset-0 bg-gradient-to-br from-wallie-dark via-wallie-charcoal/50 to-wallie-dark" />
         </div>
 
-        <div className="relative z-10 max-w-5xl mx-auto text-center">
-          {/* Status badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-wallie-charcoal/50 backdrop-blur-sm border border-wallie-accent/20 mb-8 mt-4 md:mt-8 lg:mt-12">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-wallie-accent opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-wallie-accent"></span>
-            </span>
-            <span className="text-sm text-wallie-text-secondary">
-              Now in Beta • Building the Future
-            </span>
-          </div>
+        <div className="relative z-10 max-w-7xl mx-auto w-full">
+          <div className="max-w-4xl">
+            {/* Main headline - Cloudflare style */}
+            <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold mb-8 leading-[1.1]">
+              Connect, create, and share{" "}
+              <span className="text-wallie-accent">
+                transparently
+              </span>
+            </h1>
 
-          {/* Main headline */}
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-            <span className="bg-gradient-to-r from-white via-wallie-accent to-wallie-purple bg-clip-text text-transparent">
-              Your Data.
-            </span>
-            <br />
-            <span className="text-wallie-text-primary">
-              Your Network.
-            </span>
-            <br />
-            <span className="bg-gradient-to-r from-wallie-pink to-wallie-purple bg-clip-text text-transparent">
-              Your Control.
-            </span>
-          </h1>
+            {/* Subheadline */}
+            <p className="text-xl md:text-2xl text-wallie-text-secondary mb-12 max-w-2xl leading-relaxed">
+              We make social networking open source and transparent. Our platform is the best place to build authentic connections and share content that matters.
+            </p>
 
-          {/* Subheadline */}
-          <p className="text-xl md:text-2xl text-wallie-text-secondary mb-12 max-w-3xl mx-auto leading-relaxed">
-            Welcome to <span className="text-wallie-accent font-semibold">Wallie</span>, the transparent social network.
-            Open source, custom algorithms, and creator-first revenue. Built for the community.
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <Link
-              to="/signup"
-              className={cn(
-                "px-8 py-4 rounded-xl font-bold text-lg",
-                "bg-wallie-pink text-white",
-                "shadow-lg shadow-wallie-pink/30",
-                "hover:shadow-xl hover:shadow-wallie-pink/40 hover:scale-105",
-                "transition-all duration-200"
-              )}
-            >
-              Join the Revolution
-            </Link>
-            <button
-              onClick={() => {
-                document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className={cn(
-                "px-8 py-4 rounded-xl font-semibold text-lg",
-                "bg-wallie-charcoal/50 text-wallie-text-primary backdrop-blur-sm",
-                "border border-white/10",
-                "hover:bg-wallie-charcoal hover:border-white/20",
-                "transition-all duration-200"
-              )}
-            >
-              Learn More
-            </button>
-          </div>
-
-          {/* Live Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
-            <div className="bg-wallie-charcoal/50 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-              <div className="text-4xl font-bold text-wallie-accent mb-2">
-                {totalSignups.toLocaleString()}
-              </div>
-              <div className="text-sm text-wallie-text-secondary">
-                Early Adopters
-              </div>
+            {/* CTA Button - Simpler Cloudflare style */}
+            <div className="flex flex-col sm:flex-row items-start gap-4 mb-20">
+              <Link
+                to="/signup"
+                className={cn(
+                  "px-8 py-4 rounded-lg font-semibold text-lg",
+                  "bg-wallie-pink text-white",
+                  "shadow-lg shadow-wallie-pink/30",
+                  "hover:shadow-xl hover:shadow-wallie-pink/40",
+                  "transition-all duration-200"
+                )}
+              >
+                Start for free
+              </Link>
+              <Link
+                to="/login"
+                className={cn(
+                  "px-8 py-4 rounded-lg font-semibold text-lg",
+                  "text-wallie-text-primary border border-white/20",
+                  "hover:bg-wallie-charcoal/50 hover:border-white/30",
+                  "transition-all duration-200"
+                )}
+              >
+                Sign in
+              </Link>
             </div>
-            <div className="bg-wallie-charcoal/50 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-              <div className="text-4xl font-bold text-wallie-success mb-2 animate-pulse">
-                {onlineUsers.toLocaleString()}
+
+            {/* Live Stats - More subtle */}
+            <div className="flex flex-wrap gap-8 text-sm text-wallie-text-secondary">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-wallie-success opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-wallie-success"></span>
+                </span>
+                <span>
+                  <span className="font-semibold text-wallie-text-primary">{onlineUsers.toLocaleString()}</span> online now
+                </span>
               </div>
-              <div className="text-sm text-wallie-text-secondary">
-                Users Online Now
+              <div>
+                <span className="font-semibold text-wallie-text-primary">{totalSignups.toLocaleString()}</span> early adopters
               </div>
             </div>
           </div>
@@ -239,80 +204,71 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="relative pt-16 pb-32 px-6 bg-wallie-charcoal/30">
+      <section id="features" className="relative py-24 px-6 border-t border-white/5">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Why <span className="text-wallie-accent">Wallie</span>?
-            </h2>
-            <p className="text-xl text-wallie-text-secondary max-w-2xl mx-auto">
-              Built different. Built for you.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {/* Feature 1 */}
-            <div className="bg-wallie-darker rounded-2xl p-8 border border-white/10 hover:border-wallie-accent/30 transition-all duration-300 hover:shadow-wallie-lg">
-              <div className="text-4xl mb-4">🔓</div>
-              <h3 className="text-2xl font-bold mb-3 text-wallie-text-primary">
+            <div className="group">
+              <div className="text-4xl mb-6">🔓</div>
+              <h3 className="text-2xl font-bold mb-4 text-wallie-text-primary">
                 Open Source
               </h3>
-              <p className="text-wallie-text-secondary leading-relaxed">
+              <p className="text-lg text-wallie-text-secondary leading-relaxed">
                 Fully transparent code. No hidden algorithms. See exactly how Wallie works and contribute to its development.
               </p>
             </div>
 
             {/* Feature 2 */}
-            <div className="bg-wallie-darker rounded-2xl p-8 border border-white/10 hover:border-wallie-purple/30 transition-all duration-300 hover:shadow-wallie-lg">
-              <div className="text-4xl mb-4">🎨</div>
-              <h3 className="text-2xl font-bold mb-3 text-wallie-text-primary">
+            <div className="group">
+              <div className="text-4xl mb-6">🎨</div>
+              <h3 className="text-2xl font-bold mb-4 text-wallie-text-primary">
                 Rich Content
               </h3>
-              <p className="text-wallie-text-secondary leading-relaxed">
+              <p className="text-lg text-wallie-text-secondary leading-relaxed">
                 Express yourself with markdown, images, and a beautiful interface designed for creators.
               </p>
             </div>
 
             {/* Feature 3 */}
-            <div className="bg-wallie-darker rounded-2xl p-8 border border-white/10 hover:border-wallie-success/30 transition-all duration-300 hover:shadow-wallie-lg">
-              <div className="text-4xl mb-4">⚡</div>
-              <h3 className="text-2xl font-bold mb-3 text-wallie-text-primary">
+            <div className="group">
+              <div className="text-4xl mb-6">⚡</div>
+              <h3 className="text-2xl font-bold mb-4 text-wallie-text-primary">
                 Lightning Fast
               </h3>
-              <p className="text-wallie-text-secondary leading-relaxed">
+              <p className="text-lg text-wallie-text-secondary leading-relaxed">
                 No loading spinners. No waiting. Everything is instant because your data is already there.
               </p>
             </div>
 
             {/* Feature 4 */}
-            <div className="bg-wallie-darker rounded-2xl p-8 border border-white/10 hover:border-wallie-accent/30 transition-all duration-300 hover:shadow-wallie-lg">
-              <div className="text-4xl mb-4">🌐</div>
-              <h3 className="text-2xl font-bold mb-3 text-wallie-text-primary">
+            <div className="group">
+              <div className="text-4xl mb-6">🌐</div>
+              <h3 className="text-2xl font-bold mb-4 text-wallie-text-primary">
                 Communities
               </h3>
-              <p className="text-wallie-text-secondary leading-relaxed">
+              <p className="text-lg text-wallie-text-secondary leading-relaxed">
                 Join communities that matter to you. Share ideas, learn, and build together.
               </p>
             </div>
 
             {/* Feature 5 */}
-            <div className="bg-wallie-darker rounded-2xl p-8 border border-white/10 hover:border-wallie-purple/30 transition-all duration-300 hover:shadow-wallie-lg">
-              <div className="text-4xl mb-4">💬</div>
-              <h3 className="text-2xl font-bold mb-3 text-wallie-text-primary">
+            <div className="group">
+              <div className="text-4xl mb-6">💬</div>
+              <h3 className="text-2xl font-bold mb-4 text-wallie-text-primary">
                 Private Messaging
               </h3>
-              <p className="text-wallie-text-secondary leading-relaxed">
+              <p className="text-lg text-wallie-text-secondary leading-relaxed">
                 End-to-end encrypted conversations. Your messages stay between you and your friends.
               </p>
             </div>
 
             {/* Feature 6 */}
-            <div className="bg-wallie-darker rounded-2xl p-8 border border-white/10 hover:border-wallie-success/30 transition-all duration-300 hover:shadow-wallie-lg">
-              <div className="text-4xl mb-4">🎙️</div>
-              <h3 className="text-2xl font-bold mb-3 text-wallie-text-primary">
+            <div className="group">
+              <div className="text-4xl mb-6">🎙️</div>
+              <h3 className="text-2xl font-bold mb-4 text-wallie-text-primary">
                 Hangouts
               </h3>
-              <p className="text-wallie-text-secondary leading-relaxed">
+              <p className="text-lg text-wallie-text-secondary leading-relaxed">
                 Voice and video hangouts with your community. Connect in real-time, whenever you want.
               </p>
             </div>
@@ -321,26 +277,28 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="relative py-32 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Ready to take back control?
-          </h2>
-          <p className="text-xl text-wallie-text-secondary mb-10">
-            Join the early adopters building the future of social networking.
-          </p>
-          <Link
-            to="/signup"
-            className={cn(
-              "inline-flex px-10 py-5 rounded-xl font-bold text-xl",
-              "bg-wallie-pink text-white",
-              "shadow-lg shadow-wallie-pink/30",
-              "hover:shadow-xl hover:shadow-wallie-pink/40 hover:scale-105",
-              "transition-all duration-200"
-            )}
-          >
-            Get Started Now
-          </Link>
+      <section className="relative py-32 px-6 border-t border-white/5">
+        <div className="max-w-7xl mx-auto">
+          <div className="max-w-3xl">
+            <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+              Ready to join the transparent social network?
+            </h2>
+            <p className="text-xl text-wallie-text-secondary mb-10 max-w-2xl">
+              Start building authentic connections today.
+            </p>
+            <Link
+              to="/signup"
+              className={cn(
+                "inline-flex px-8 py-4 rounded-lg font-semibold text-lg",
+                "bg-wallie-pink text-white",
+                "shadow-lg shadow-wallie-pink/30",
+                "hover:shadow-xl hover:shadow-wallie-pink/40",
+                "transition-all duration-200"
+              )}
+            >
+              Start for free
+            </Link>
+          </div>
         </div>
       </section>
 
