@@ -1,8 +1,14 @@
 import { type RouteConfig, index, layout, route } from "@react-router/dev/routes";
 
 export default [
-  // Landing page (shown only when not logged in)
+  // Landing page (public feed)
   index("routes/_index.tsx"),
+
+  // About page (marketing site)
+  route("about", "routes/about.tsx"),
+
+  // Public post detail page
+  route("posts/:postId", "routes/posts.$postId.tsx"),
 
   // Public invite landing page
   route("invite/:code", "routes/invite.$code.tsx"),
@@ -34,6 +40,7 @@ export default [
   route("api/health", "routes/api.health.tsx"),
   route("api/stats", "routes/api.stats.tsx"),
   route("api/post", "routes/api.post.tsx"),
+  route("api/posts/poll", "routes/api.posts.poll.tsx"),
   route("api/posts/:postId/like", "routes/api.posts.$postId.like.tsx"),
   route("api/posts/:postId/likes", "routes/api.posts.$postId.likes.tsx"),
   route("api/posts/:postId/delete", "routes/api.posts.$postId.delete.tsx"),

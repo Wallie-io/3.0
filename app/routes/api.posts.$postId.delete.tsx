@@ -1,16 +1,16 @@
 /**
  * Post Delete API Route
- * Handles deleting posts (only by author)
+ * Handles deleting posts (by any logged-in user for moderation)
  */
 
 import { data, redirect } from 'react-router';
 import type { Route } from './+types/api.posts.$postId.delete';
-import { deletePost } from '~/db/services/posts';
+import { deletePostAsModeration } from '~/db/services/posts';
 import { requireUserId } from '~/lib/session.server';
 
 /**
  * POST /api/posts/:postId/delete
- * Delete a post (only if current user is the author)
+ * Delete a post (any logged-in user can delete for moderation)
  */
 export async function action({ params, request }: Route.ActionArgs) {
   const userId = await requireUserId(request);
@@ -25,12 +25,12 @@ export async function action({ params, request }: Route.ActionArgs) {
   }
 
   try {
-    const success = await deletePost(postId, userId);
+    const success = await deletePostAsModeration(postId, userId);
 
     if (!success) {
       return data(
-        { error: 'Post not found or you are not authorized to delete it', success: false },
-        { status: 403 }
+        { error: 'Post not found', success: false },
+        { status: 404 }
       );
     }
 

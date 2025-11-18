@@ -41,7 +41,8 @@ export const profiles = pgTable('profiles', {
 // Posts table
 export const posts = pgTable('posts', {
   id: text('id').primaryKey(),
-  authorId: text('author_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  authorId: text('author_id').references(() => users.id, { onDelete: 'cascade' }),
+  anonymousAuthor: text('anonymous_author'),
   replyToId: text('reply_to_id'),
   content: text('content').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
@@ -179,6 +180,15 @@ export const referrals = pgTable('referrals', {
   createdAt: timestamp('created_at').defaultNow()
 });
 
+// Health checks table
+export const healthChecks = pgTable('health_checks', {
+  id: text('id').primaryKey(),
+  service: text('service').notNull(),
+  status: text('status').notNull(),
+  message: text('message'),
+  checkedAt: timestamp('checked_at').defaultNow()
+});
+
 // Type exports for TypeScript
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -227,3 +237,6 @@ export type NewUserConnection = typeof userConnections.$inferInsert;
 
 export type Referral = typeof referrals.$inferSelect;
 export type NewReferral = typeof referrals.$inferInsert;
+
+export type HealthCheck = typeof healthChecks.$inferSelect;
+export type NewHealthCheck = typeof healthChecks.$inferInsert;

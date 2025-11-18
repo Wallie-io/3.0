@@ -21,25 +21,44 @@ dayjs.extend(relativeTime);
 interface PostCardProps {
   post: PostWithStats;
   featured?: boolean;
-  currentUserId?: string | null;
+  userId?: string | null;
 }
 
 // ============================================================================
 // Component
 // ============================================================================
 
-export function PostCard({ post, featured = false, currentUserId }: PostCardProps) {
+export function PostCard({ post, featured = false, userId }: PostCardProps) {
   const likeFetcher = useFetcher();
   const deleteFetcher = useFetcher();
   const [showLikesModal, setShowLikesModal] = useState(false);
 
   // Check if current user owns this post
-  const isOwner = currentUserId && post.author_id === currentUserId;
+  const isOwner = userId && post.author_id === userId;
+
+  // Check if this is an anonymous post
+  const isAnonymous = !!post.anonymousAuthor;
+
+  // Show delete button for logged-in users (moderation)
+  const canDelete = !!userId;
+
+  // Anonymous likes stored in sessionStorage
+  const [anonymousLikes, setAnonymousLikes] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      const stored = sessionStorage.getItem('anonymousLikes');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  const isLikedAnonymously = anonymousLikes.has(post.id);
 
   // Optimistic like state
   const isLiked = likeFetcher.formData
     ? likeFetcher.formData.get('action') === 'like'
-    : post.isLikedByUser;
+    : userId ? post.isLikedByUser : isLikedAnonymously;
 
   const likeCount = likeFetcher.formData
     ? post.likeCount + (likeFetcher.formData.get('action') === 'like' ? 1 : -1)
@@ -50,6 +69,26 @@ export function PostCard({ post, featured = false, currentUserId }: PostCardProp
     e.preventDefault();
     e.stopPropagation();
 
+    // For anonymous users, store likes in sessionStorage
+    if (!userId) {
+      const newLikes = new Set(anonymousLikes);
+      if (isLikedAnonymously) {
+        newLikes.delete(post.id);
+      } else {
+        newLikes.add(post.id);
+      }
+      setAnonymousLikes(newLikes);
+
+      // Persist to sessionStorage
+      try {
+        sessionStorage.setItem('anonymousLikes', JSON.stringify(Array.from(newLikes)));
+      } catch (error) {
+        console.error('Failed to save anonymous likes:', error);
+      }
+      return;
+    }
+
+    // For logged-in users, submit to backend
     const formData = new FormData();
     formData.append('action', isLiked ? 'unlike' : 'like');
 
@@ -85,19 +124,39 @@ export function PostCard({ post, featured = false, currentUserId }: PostCardProp
         featured && 'md:col-span-2'
       )}
     >
+      {/* Reply Context */}
+      {post.replyToContent && (
+        <div className="mb-4 p-3 rounded-lg bg-wallie-charcoal/30 border border-white/5">
+          <div className="text-xs text-wallie-text-tertiary mb-1">Replying to:</div>
+          <div className="text-sm text-wallie-text-secondary italic">
+            {post.replyToContent}
+          </div>
+        </div>
+      )}
+
       {/* Author Info */}
       <div className="mb-4 flex items-center gap-3">
         <div
           className={cn(
-            'rounded-full bg-gradient-to-br from-wallie-accent to-wallie-purple flex items-center justify-center text-gray-900 font-bold',
+            'rounded-full flex items-center justify-center font-bold',
+            isAnonymous
+              ? 'bg-gradient-to-br from-gray-600 to-gray-700 text-gray-300'
+              : 'bg-gradient-to-br from-wallie-accent to-wallie-purple text-gray-900',
             featured ? 'h-12 w-12' : 'h-10 w-10'
           )}
         >
           {post.author_name.charAt(0).toUpperCase()}
         </div>
         <div>
-          <div className={cn('font-semibold text-gray-100', featured && 'text-lg')}>
-            {post.author_name}
+          <div className={cn('font-semibold flex items-center gap-2', featured && 'text-lg')}>
+            <span className={isAnonymous ? 'text-gray-400' : 'text-gray-100'}>
+              {post.author_name}
+            </span>
+            {isAnonymous && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-gray-700/50 text-gray-400 border border-gray-600/50">
+                Anonymous
+              </span>
+            )}
           </div>
           <div className="text-sm text-gray-500">
             {post.createdAt ? dayjs(post.createdAt).fromNow() : 'Just now'}
@@ -185,13 +244,13 @@ export function PostCard({ post, featured = false, currentUserId }: PostCardProp
           </svg>
         </button>
 
-        {/* Delete Button (only for post owner) */}
-        {isOwner && (
+        {/* Delete Button (for all logged-in users - moderation) */}
+        {canDelete && (
           <button
             onClick={handleDelete}
             disabled={deleteFetcher.state !== 'idle'}
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-400 transition-colors hover:bg-red-900/20 hover:text-red-400 disabled:opacity-50"
-            title="Delete post"
+            title={isOwner ? "Delete post" : "Delete post (moderation)"}
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path

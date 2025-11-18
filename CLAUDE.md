@@ -182,6 +182,141 @@ await destroySession(request);
 
 ---
 
+## Database Migrations with Drizzle ORM
+
+**⚠️ CRITICAL: Always use Drizzle for schema migrations unless absolutely necessary.**
+
+Wallie uses **Drizzle ORM** with PostgreSQL (Supabase). All schema changes MUST go through Drizzle's migration system.
+
+### Why Use Drizzle Migrations?
+
+- ✅ **Type-safe** - Generated from TypeScript schema
+- ✅ **Automatic** - Detects schema changes automatically
+- ✅ **Rollback support** - Can revert migrations
+- ✅ **Version controlled** - Migrations tracked in git
+- ❌ **Never write raw SQL migrations manually** (unless Drizzle cannot handle the change)
+
+### Workflow for Schema Changes
+
+**Step 1: Update the schema**
+
+Edit `app/db/schema.ts`:
+
+```typescript
+// Add a new column
+export const posts = pgTable('posts', {
+  id: text('id').primaryKey(),
+  authorId: text('author_id').references(() => users.id),
+  anonymousAuthor: text('anonymous_author'),  // ← New column
+  content: text('content').notNull(),
+  // ...
+});
+```
+
+**Step 2: Ensure DATABASE_URL is set**
+
+Create `.env` if it doesn't exist:
+
+```bash
+DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+SESSION_SECRET=your-secret-here
+```
+
+**Step 3: Generate migration**
+
+```bash
+npm run db:generate
+```
+
+This auto-generates a migration in `drizzle/XXXX_migration_name.sql` based on schema changes.
+
+**Step 4: Review the migration**
+
+Open the generated file and verify:
+- ✅ Only expected changes are included
+- ❌ No unexpected DROP TABLE statements
+- ❌ No data loss unless intentional
+
+**Step 5: Apply migration**
+
+For **development**:
+```bash
+npm run db:push
+```
+
+For **production** (safer):
+```bash
+npm run db:migrate
+```
+
+Or apply manually via **Supabase SQL Editor** (recommended for production).
+
+### ⚠️ Common Pitfalls
+
+**Problem: "Drizzle wants to drop a table I need"**
+
+**Solution:** Add the missing table to `app/db/schema.ts`
+
+```typescript
+// If Drizzle detects a table in the DB but not in schema, it will try to drop it
+// Add it to schema to preserve it:
+export const healthChecks = pgTable('health_checks', {
+  id: text('id').primaryKey(),
+  service: text('service').notNull(),
+  status: text('status').notNull(),
+  checkedAt: timestamp('checked_at').defaultNow()
+});
+```
+
+**Problem: "Migration has data loss warnings"**
+
+**Solution:** Review carefully. Data loss migrations are sometimes necessary (removing columns, changing types), but always:
+1. Backup data first
+2. Consider migration scripts to preserve data
+3. Apply manually in production after testing
+
+**Problem: "Can't generate migration - DATABASE_URL missing"**
+
+**Solution:** Ensure `.env` file exists with valid `DATABASE_URL`. If you can't access the DB during development, you can:
+1. Use a local Postgres instance
+2. Create migrations manually (last resort)
+3. Apply schema changes directly in Supabase dashboard, then sync schema with `drizzle-kit pull`
+
+### When Manual SQL is Acceptable
+
+Only write manual SQL migrations when:
+- Creating Postgres triggers (not supported by Drizzle schema)
+- Creating custom functions
+- Complex data transformations during migration
+- Drizzle cannot represent the schema change
+
+**Example: Postgres Trigger (Manual SQL OK)**
+
+```sql
+-- drizzle/XXXX_add_notification_trigger.sql
+CREATE OR REPLACE FUNCTION notify_new_post()
+RETURNS trigger AS $$
+BEGIN
+  PERFORM pg_notify('posts_channel', '');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER posts_insert_notify
+AFTER INSERT ON posts
+FOR EACH ROW EXECUTE FUNCTION notify_new_post();
+```
+
+**For everything else: Use Drizzle.**
+
+### Commands Reference
+
+```bash
+npm run db:generate    # Generate migration from schema changes
+npm run db:migrate     # Apply migrations to database (production)
+npm run db:push        # Push schema directly to DB (dev only, can drop tables!)
+npm run db:studio      # Open Drizzle Studio UI for database browsing
+```
 
 ---
 

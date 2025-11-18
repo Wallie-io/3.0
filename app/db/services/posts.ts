@@ -20,15 +20,17 @@ export interface PostWithAuthor {
   updatedAt: Date | null;
   synced: boolean | null;
   replyToId: string | null;
-  author_id: string;
+  author_id: string | null;
   author_name: string;
   author_avatar: string | null;
+  anonymousAuthor: string | null;
 }
 
 export interface PostWithStats extends PostWithAuthor {
   likeCount: number;
   replyCount: number;
   isLikedByUser?: boolean;
+  replyToContent?: string | null; // First 50 chars of parent post
 }
 
 // ============================================================================
@@ -48,8 +50,9 @@ export async function getAllPosts(): Promise<PostWithAuthor[]> {
       synced: posts.synced,
       replyToId: posts.replyToId,
       author_id: posts.authorId,
-      author_name: sql<string>`COALESCE(${profiles.displayName}, ${users.email})`,
+      author_name: sql<string>`COALESCE(${profiles.displayName}, ${users.email}, ${posts.anonymousAuthor}, 'Anonymous')`,
       author_avatar: profiles.avatarUrl,
+      anonymousAuthor: posts.anonymousAuthor,
     })
     .from(posts)
     .leftJoin(users, eq(posts.authorId, users.id))
@@ -250,7 +253,8 @@ export async function getTopLevelPostsWithStats(userId?: string): Promise<PostWi
  */
 export async function createPost(data: {
   id?: string;
-  authorId: string;
+  authorId?: string | null;
+  anonymousAuthor?: string | null;
   content: string;
   replyToId?: string;
   synced?: boolean;
@@ -261,7 +265,8 @@ export async function createPost(data: {
     .insert(posts)
     .values({
       id: postId,
-      authorId: data.authorId,
+      authorId: data.authorId || null,
+      anonymousAuthor: data.anonymousAuthor || null,
       content: data.content,
       replyToId: data.replyToId,
       synced: data.synced ?? true,
@@ -308,4 +313,83 @@ export async function updatePost(
     .returning();
 
   return post || null;
+}
+
+/**
+ * Get all posts for public feed with stats and parent context
+ * Includes both top-level posts and replies
+ * For replies, includes first 50 chars of parent post
+ */
+export async function getAllPostsForPublicFeed(userId?: string): Promise<PostWithStats[]> {
+  const allPosts = await getAllPosts();
+
+  // Get stats for all posts in parallel
+  const postsWithStats = await Promise.all(
+    allPosts.map(async (post) => {
+      // Count likes for this post
+      const [likeCountResult] = await db
+        .select({ count: count() })
+        .from(postLikes)
+        .where(eq(postLikes.postId, post.id));
+
+      // Count replies for this post
+      const [replyCountResult] = await db
+        .select({ count: count() })
+        .from(posts)
+        .where(eq(posts.replyToId, post.id));
+
+      // Check if user liked this post
+      let isLikedByUser = false;
+      if (userId) {
+        const [userLike] = await db
+          .select()
+          .from(postLikes)
+          .where(and(eq(postLikes.postId, post.id), eq(postLikes.userId, userId)))
+          .limit(1);
+        isLikedByUser = !!userLike;
+      }
+
+      // If this is a reply, get first 50 chars of parent post
+      let replyToContent: string | null = null;
+      if (post.replyToId) {
+        const parentPost = await getPostById(post.replyToId);
+        if (parentPost) {
+          replyToContent = parentPost.content.substring(0, 50);
+          if (parentPost.content.length > 50) {
+            replyToContent += '...';
+          }
+        }
+      }
+
+      return {
+        ...post,
+        likeCount: Number(likeCountResult.count),
+        replyCount: Number(replyCountResult.count),
+        isLikedByUser,
+        replyToContent,
+      };
+    })
+  );
+
+  return postsWithStats;
+}
+
+/**
+ * Delete a post by ID - allows any logged-in user (for moderation)
+ * @param postId - The post ID to delete
+ * @param userId - The user ID attempting the deletion (must be logged in)
+ * @returns true if deleted, false if not found
+ */
+export async function deletePostAsModeration(postId: string, userId: string): Promise<boolean> {
+  // Verify user is logged in (has a valid userId)
+  if (!userId) {
+    return false;
+  }
+
+  const result = await db
+    .delete(posts)
+    .where(eq(posts.id, postId))
+    .returning();
+
+  return result.length > 0;
 }
