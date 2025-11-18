@@ -11,6 +11,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { cn } from '~/lib/utils';
 import type { PostWithStats } from '~/db/services/posts';
+import { ShareModal } from './ShareModal';
 
 dayjs.extend(relativeTime);
 
@@ -32,6 +33,7 @@ export function PostCard({ post, featured = false, userId }: PostCardProps) {
   const likeFetcher = useFetcher();
   const deleteFetcher = useFetcher();
   const [showLikesModal, setShowLikesModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // Check if current user owns this post
   const isOwner = userId && post.author_id === userId;
@@ -226,11 +228,12 @@ export function PostCard({ post, featured = false, userId }: PostCardProps) {
           <span>{post.replyCount}</span>
         </div>
 
-        {/* Share Button (placeholder) */}
+        {/* Share Button */}
         <button
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            setShowShareModal(true);
           }}
           className="ml-auto flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-400 transition-colors hover:bg-gray-800 hover:text-gray-100"
         >
@@ -263,6 +266,13 @@ export function PostCard({ post, featured = false, userId }: PostCardProps) {
           </button>
         )}
       </div>
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        postId={post.id}
+      />
     </Link>
   );
 }

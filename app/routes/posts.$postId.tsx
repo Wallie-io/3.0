@@ -109,7 +109,7 @@ export default function PublicPostDetail() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <Link to="/" className="flex items-center gap-2">
-              <div className="text-2xl font-bold bg-gradient-to-r from-wallie-accent to-wallie-purple bg-clip-text text-transparent font-display">
+              <div className="text-2xl font-bold text-wallie-accent font-display">
                 Wallie
               </div>
             </Link>
@@ -144,7 +144,7 @@ export default function PublicPostDetail() {
       </nav>
 
       {/* Main Content */}
-      <div className="pt-20 pb-12">
+      <div className="pt-24 pb-12">
         <div className="max-w-4xl mx-auto px-6">
           {/* Back Button */}
           <button

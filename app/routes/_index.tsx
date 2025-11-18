@@ -8,7 +8,6 @@ import { getAllPostsForPublicFeed } from "~/db/services/posts";
 import { usePostPolling } from "~/hooks/use-post-polling";
 import { PostCard } from "~/components/PostCard";
 import { LoginRequiredModal } from "~/components/LoginRequiredModal";
-import { PlusCircle } from "lucide-react";
 
 /**
  * Landing Page / Public Feed Loader
@@ -56,20 +55,18 @@ export default function PublicFeedPage() {
       {/* Top Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-wallie-dark/80 backdrop-blur-lg border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="text-2xl font-bold bg-gradient-to-r from-wallie-accent to-wallie-purple bg-clip-text text-transparent font-display">
-                Wallie
-              </div>
-            </Link>
+          <Link to="/" className="flex items-center gap-2">
+            <div className="text-2xl font-bold text-wallie-accent font-display">
+              Wallie
+            </div>
+          </Link>
+          <div className="flex items-center gap-4">
             <Link
               to="/about"
               className="text-wallie-text-secondary hover:text-wallie-text-primary transition-colors"
             >
               About
             </Link>
-          </div>
-          <div className="flex items-center gap-4">
             <Link
               to="/login"
               className="px-4 py-2 rounded-lg text-wallie-text-secondary hover:text-wallie-text-primary transition-colors"
@@ -93,22 +90,32 @@ export default function PublicFeedPage() {
       </nav>
 
       {/* Main Content */}
-      <div className="pt-20 pb-12">
+      <div className="pt-24 pb-12">
         <div className="max-w-4xl mx-auto px-6">
-          {/* Create Post Button */}
-          <div className="mb-8">
+          {/* Create Post Button - Matches dashboard style */}
+          <div className="mb-6">
             <button
               onClick={() => setShowLoginModal(true)}
-              className={cn(
-                "w-full p-4 rounded-xl border border-white/10",
-                "bg-wallie-charcoal/50 hover:bg-wallie-charcoal",
-                "text-wallie-text-secondary hover:text-wallie-text-primary",
-                "transition-all duration-200",
-                "flex items-center gap-3"
-              )}
+              className="w-full bg-wallie-darker/70 backdrop-blur-xl rounded-2xl shadow-wallie-lg border border-white/10 p-6 transition-all hover:border-wallie-accent/30 hover:shadow-wallie-xl text-left"
             >
-              <PlusCircle className="w-5 h-5" />
-              <span>Create a post...</span>
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center text-gray-300 font-bold">
+                  ?
+                </div>
+                <div className="flex-1">
+                  <p className="text-lg text-wallie-text-tertiary">What's on your mind?</p>
+                </div>
+                <div className={cn(
+                  "px-6 py-3 rounded-lg font-semibold",
+                  "bg-wallie-accent text-wallie-dark",
+                  "shadow-wallie-glow-accent",
+                  "hover:bg-wallie-accent/90 hover:shadow-wallie-xl",
+                  "transition-all duration-200",
+                  "active:scale-[0.98]"
+                )}>
+                  Create Post
+                </div>
+              </div>
             </button>
           </div>
 
