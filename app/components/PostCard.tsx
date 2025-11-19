@@ -34,6 +34,7 @@ export function PostCard({ post, featured = false, userId }: PostCardProps) {
   const deleteFetcher = useFetcher();
   const [showLikesModal, setShowLikesModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // Check if current user owns this post
   const isOwner = userId && post.author_id === userId;
@@ -104,10 +105,13 @@ export function PostCard({ post, featured = false, userId }: PostCardProps) {
   const handleDelete = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setShowDeleteModal(true);
+  };
 
-    if (!confirm('Are you sure you want to delete this post?')) {
-      return;
-    }
+  // Handle delete confirmation
+  const handleConfirmDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
 
     deleteFetcher.submit(
       {},
@@ -116,6 +120,7 @@ export function PostCard({ post, featured = false, userId }: PostCardProps) {
         action: `/api/posts/${post.id}/delete`,
       }
     );
+    setShowDeleteModal(false);
   };
 
   return (
@@ -273,6 +278,61 @@ export function PostCard({ post, featured = false, userId }: PostCardProps) {
         onClose={() => setShowShareModal(false)}
         postId={post.id}
       />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowDeleteModal(false);
+          }}
+        >
+          <div
+            className="bg-wallie-charcoal border border-white/10 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-2xl font-bold text-wallie-text-primary mb-4">
+              Delete post
+            </h3>
+            <p className="text-wallie-text-secondary mb-6">
+              Are you sure you want to delete this post? This action cannot be undone.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowDeleteModal(false);
+                }}
+                className={cn(
+                  "flex-1 px-4 py-2 rounded-lg",
+                  "text-wallie-text-secondary border border-white/20",
+                  "hover:bg-wallie-dark hover:text-wallie-text-primary",
+                  "transition-all duration-200"
+                )}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={deleteFetcher.state !== 'idle'}
+                className={cn(
+                  "flex-1 px-4 py-2 rounded-lg font-semibold",
+                  "bg-red-600 text-white shadow-lg shadow-red-600/30",
+                  "hover:bg-red-700 hover:shadow-xl hover:shadow-red-600/40",
+                  "transition-all duration-200",
+                  "disabled:opacity-50 disabled:cursor-not-allowed"
+                )}
+              >
+                {deleteFetcher.state !== 'idle' ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Link>
   );
 }
